@@ -217,8 +217,8 @@ export default async function handler(req, res) {
       return;
     }
     // Guard against oversized payloads (Vercel body limit ~4.5MB).
-    if (audioBase64.length > 6_000_000) {
-      res.status(413).json({ error: 'Recording is too long to analyze. Keep analyzed clips under about 2 minutes.' });
+    if (audioBase64.length > 4_300_000) {
+      res.status(413).json({ error: 'Recording is too long to analyze. Keep analyzed clips under about 90 seconds.' });
       return;
     }
     const prompt = buildPrompt({ day, title, referenceText, weakSpots });
