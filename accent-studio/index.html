@@ -1,0 +1,1974 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Accent Studio — 60-Day American Accent Trainer</title>
+<meta name="description" content="A 60-day structured program to build a natural American accent: daily drills, in-app voice recording, progress dashboard and spaced-repetition weak-spot drills.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#191512; --panel:#221d18; --panel-2:#2a241d;
+    --line-solid:#3a3128; --ink:#f1e9dc; --ink-soft:#c4b9a6; --ink-faint:#8a7f6d;
+    --amber:#e9a23b; --coral:#e0734a; --sage:#8fae6e; --sky:#7fa8c4; --plum:#c98bb9;
+    --shadow:0 18px 40px -18px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    background-image:
+      radial-gradient(900px 500px at 88% -8%, rgba(233,162,59,.10), transparent 60%),
+      radial-gradient(700px 400px at 5% 102%, rgba(224,115,74,.08), transparent 60%);
+    min-height:100vh; padding:0 0 90px;
+  }
+  ::selection{background:var(--amber);color:#1a140c}
+  h1,h2,h3,.serif{font-family:'Fraunces',serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  a{color:var(--amber)}
+
+  header{padding:34px 0 18px;border-bottom:1px solid var(--line-solid);margin-bottom:24px}
+  .brandrow{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .brand .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber)}
+  .brand h1{font-size:clamp(28px,4.6vw,46px);font-weight:600;line-height:1.02;margin-top:6px;letter-spacing:-.01em}
+  .brand h1 em{font-style:italic;color:var(--coral)}
+  .brand p{color:var(--ink-soft);margin-top:8px;font-size:14.5px;max-width:48ch}
+  .setup-btn{background:transparent;border:1px solid var(--line-solid);color:var(--ink-soft);
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;padding:9px 14px;border-radius:8px;cursor:pointer;transition:.2s}
+  .setup-btn:hover{border-color:var(--amber);color:var(--amber)}
+
+  nav.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:24px;background:var(--panel);
+    padding:5px;border-radius:13px;border:1px solid var(--line-solid);width:fit-content}
+  .tab{font-family:'Hanken Grotesk';font-weight:600;font-size:13px;color:var(--ink-faint);
+    background:transparent;border:0;padding:9px 15px;border-radius:9px;cursor:pointer;transition:.18s;white-space:nowrap}
+  .tab:hover{color:var(--ink)}
+  .tab.active{background:var(--amber);color:#1a140c}
+
+  .view{display:none;animation:fade .35s ease}
+  .view.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+  .card{background:var(--panel);border:1px solid var(--line-solid);border-radius:15px;padding:22px}
+  .grid{display:grid;gap:16px}
+  .section-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+
+  .dash-top{display:grid;grid-template-columns:300px 1fr;gap:16px}
+  @media(max-width:780px){.dash-top{grid-template-columns:1fr}}
+  .ring-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .ring-wrap{position:relative;width:188px;height:188px}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring-center .big{font-family:'Fraunces',serif;font-size:52px;font-weight:600;line-height:1}
+  .ring-center .lbl{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.15em;color:var(--ink-faint);text-transform:uppercase;margin-top:3px}
+  .ring-sub{margin-top:14px;color:var(--ink-soft);font-size:13.5px}
+  .ring-sub b{color:var(--amber)}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .stat{background:var(--panel-2);border:1px solid var(--line-solid);border-radius:13px;padding:16px 17px;position:relative;overflow:hidden}
+  .stat .num{font-family:'Fraunces',serif;font-size:34px;font-weight:600;line-height:1}
+  .stat .cap{font-size:12.5px;color:var(--ink-soft);margin-top:5px}
+  .stat .glyph{position:absolute;right:12px;top:10px;font-size:20px;opacity:.5}
+  .stat.s-streak .num{color:var(--coral)} .stat.s-min .num{color:var(--amber)}
+  .stat.s-done .num{color:var(--sage)} .stat.s-rec .num{color:var(--sky)}
+
+  .radar-card,.heat-card{margin-top:16px}
+  .radar-flex{display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:center}
+  @media(max-width:680px){.radar-flex{grid-template-columns:1fr}}
+  .legend{display:flex;flex-direction:column;gap:9px}
+  .legend .row{display:flex;align-items:center;gap:10px;font-size:13.5px}
+  .legend .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .legend .bar-track{flex:1;height:6px;background:var(--panel-2);border-radius:4px;overflow:hidden}
+  .legend .bar-fill{height:100%;border-radius:4px}
+  .legend .val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);width:34px;text-align:right}
+
+  .heat{display:flex;flex-wrap:wrap;gap:4px}
+  .heat .cell{width:15px;height:15px;border-radius:3.5px;background:var(--panel-2);border:1px solid var(--line-solid)}
+  .heat .cell.l1{background:rgba(233,162,59,.28)} .heat .cell.l2{background:rgba(233,162,59,.55)}
+  .heat .cell.l3{background:var(--amber)}
+  .heat .cell.today{box-shadow:0 0 0 2px var(--coral)}
+  .heat-key{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:11.5px;color:var(--ink-faint)}
+  .heat-key .cell{width:12px;height:12px;border-radius:3px}
+
+  /* dashboard drills */
+  .dash-drill{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:11px 13px;background:var(--panel-2);border:1px solid var(--line-solid);border-radius:11px;margin-bottom:8px}
+  .dash-drill:last-child{margin-bottom:0}
+  .dd-label{font-weight:700;font-size:14px}
+  .dd-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);margin-top:2px}
+
+  /* today */
+  .day-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  .day-nav{display:flex;gap:6px;align-items:center}
+  .navbtn{background:var(--panel-2);border:1px solid var(--line-solid);color:var(--ink-soft);
+    width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:15px;transition:.18s}
+  .navbtn:hover{border-color:var(--amber);color:var(--amber)}
+  .navbtn:disabled{opacity:.3;cursor:not-allowed}
+  .phase-pill{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:20px;
+    background:rgba(233,162,59,.13);color:var(--amber);border:1px solid rgba(233,162,59,.25)}
+  .day-title{font-family:'Fraunces',serif;font-size:clamp(24px,3.6vw,34px);font-weight:600;margin:10px 0 4px;letter-spacing:-.01em}
+  .day-why{color:var(--ink-soft);font-size:14.5px;font-style:italic;font-family:'Fraunces',serif;max-width:62ch}
+  .day-meta{display:flex;gap:18px;margin:16px 0 4px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-faint);
+    font-family:'JetBrains Mono',monospace}
+  .day-meta b{color:var(--ink-soft)}
+
+  .ex{display:flex;gap:14px;padding:16px 4px;border-bottom:1px solid var(--line-solid)}
+  .ex:last-child{border-bottom:0}
+  .ex .check{flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line-solid);
+    background:var(--panel-2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:.16s;margin-top:1px;font-size:14px;color:transparent}
+  .ex .check:hover{border-color:var(--amber)}
+  .ex.done .check{background:var(--sage);border-color:var(--sage);color:#1a140c}
+  .ex .body{flex:1}
+  .ex .etitle{font-weight:700;font-size:15px;display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+  .ex .emin{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--amber);
+    border:1px solid rgba(233,162,59,.3);padding:2px 7px;border-radius:20px}
+  .ex .edesc{color:var(--ink-soft);font-size:13.5px;margin-top:5px;line-height:1.55}
+  .ex.done .etitle,.ex.done .edesc{opacity:.5;text-decoration:line-through;text-decoration-color:var(--ink-faint)}
+  .listen{margin-top:16px;background:var(--panel-2);border:1px solid var(--line-solid);
+    border-left:3px solid var(--sky);border-radius:0 11px 11px 0;padding:13px 16px;font-size:13.5px;color:var(--ink-soft)}
+  .listen b{color:var(--sky);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+
+  .day-progress{margin-top:18px;display:flex;align-items:center;gap:13px}
+  .dp-track{flex:1;height:8px;background:var(--panel-2);border-radius:5px;overflow:hidden}
+  .dp-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--coral));border-radius:5px;transition:.4s}
+  .dp-label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft)}
+
+  .btn{font-family:'Hanken Grotesk';font-weight:700;font-size:13.5px;border-radius:10px;
+    padding:11px 18px;cursor:pointer;border:1px solid var(--line-solid);transition:.18s;color:var(--ink)}
+  .btn.primary{background:var(--amber);color:#1a140c;border-color:var(--amber)}
+  .btn.primary:hover{background:#f2b257}
+  .btn.ghost{background:transparent;color:var(--ink-soft)}
+  .btn.ghost:hover{border-color:var(--amber);color:var(--amber)}
+  .btn.mini{padding:7px 12px;font-size:12px;border-radius:8px}
+
+  /* recorder */
+  .rec-stage{display:flex;flex-direction:column;align-items:center;gap:10px;
+    background:var(--panel-2);border:1px solid var(--line-solid);border-radius:13px;padding:22px 18px}
+  .rec-start{background:var(--coral);border-color:var(--coral);color:#1a140c;font-size:15px;
+    display:flex;align-items:center;gap:9px;padding:13px 24px}
+  .rec-start:hover{background:#e8855f}
+  .rec-dot{width:11px;height:11px;border-radius:50%;background:#1a140c;display:inline-block}
+  .rec-hint{color:var(--ink-faint);font-size:12.5px;text-align:center;max-width:46ch}
+  .rec-stage.recording{border-color:rgba(224,115,74,.5)}
+  .rec-pulse{width:26px;height:26px;border-radius:50%;background:var(--coral);
+    animation:pulse 1.1s infinite ease-in-out}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.55}}
+  .rec-timer{font-family:'JetBrains Mono',monospace;font-size:30px;color:var(--coral)}
+  .rec-stop{background:transparent;border-color:var(--coral);color:var(--coral)}
+  .rec-stop:hover{background:rgba(224,115,74,.12)}
+  .rec-stage.review{align-items:stretch}
+  .rec-review-label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);text-align:center}
+  .rec-bench{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);margin-top:10px;cursor:pointer}
+  .rec-bench input{width:16px;height:16px;accent-color:var(--amber)}
+  .rec-actions{display:flex;gap:10px;margin-top:14px;justify-content:flex-end}
+  .rec-list{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .rec-item{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    background:var(--panel-2);border:1px solid var(--line-solid);border-radius:11px;padding:11px 13px}
+  .rec-play{flex:none;width:34px;height:34px;border-radius:50%;background:var(--amber);color:#1a140c;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:.15s}
+  .rec-play:hover{background:#f2b257}
+  .rec-meta{flex:1;min-width:140px}
+  .rec-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rec-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);margin-top:3px}
+  .rec-badge{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+    background:rgba(127,168,196,.16);color:var(--sky);padding:2px 7px;border-radius:20px;border:1px solid rgba(127,168,196,.3)}
+  .rec-del{flex:none;background:transparent;border:1px solid var(--line-solid);color:var(--ink-faint);
+    width:30px;height:30px;border-radius:8px;cursor:pointer;transition:.15s}
+  .rec-del:hover{border-color:var(--coral);color:var(--coral)}
+  .inline-pl{width:100%;margin-top:6px;height:38px}
+  .rec-daygroup{margin-bottom:18px}
+  .rec-daygroup:last-child{margin-bottom:0}
+  .rec-dayhead{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:9px;
+    padding-bottom:7px;border-bottom:1px solid var(--line-solid)}
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:620px){.cmp{grid-template-columns:1fr}}
+  .cmp-slot{background:var(--panel-2);border:1px solid var(--line-solid);border-radius:12px;padding:14px}
+  .cmp-hint{color:var(--ink-soft);font-size:13px;margin-bottom:14px}
+
+  /* drills */
+  .drill-card{background:var(--panel-2);border:1px solid var(--line-solid);border-radius:13px;
+    padding:15px 16px;margin-bottom:10px}
+  .drill-card.due{border-color:rgba(233,162,59,.4)}
+  .drill-card.mastered{opacity:.62}
+  .drill-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .drill-label{font-weight:700;font-size:15px}
+  .drill-note{color:var(--ink-soft);font-size:13px;margin-top:6px;line-height:1.5}
+  .drill-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;flex-wrap:wrap}
+  .drill-due{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-faint)}
+  .drill-card.due .drill-due{color:var(--amber)}
+  .drill-card.mastered .drill-due{color:var(--sage)}
+  .drill-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .sr-dots{display:flex;gap:5px}
+  .sr-dot{width:9px;height:9px;border-radius:50%;background:var(--line-solid)}
+  .sr-dot.on{background:var(--amber)}
+  .drill-card.mastered .sr-dot.on{background:var(--sage)}
+  .add-spot{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.add-spot{grid-template-columns:1fr}}
+
+  /* forms */
+  .slider-row{margin-bottom:15px}
+  .slider-row .sl-head{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:7px}
+  .slider-row .sl-head .sv{font-family:'JetBrains Mono',monospace;color:var(--amber)}
+  input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:4px;background:var(--panel-2);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:var(--amber);cursor:pointer;border:3px solid var(--panel)}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--amber);
+    cursor:pointer;border:3px solid var(--panel)}
+  input[type=number],input[type=text],textarea,select{font-family:'Hanken Grotesk';background:var(--panel-2);
+    border:1px solid var(--line-solid);color:var(--ink);border-radius:9px;padding:10px 12px;font-size:14px;width:100%}
+  textarea{resize:vertical;min-height:62px}
+  label.fld{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:560px){.form-grid{grid-template-columns:1fr}}
+
+  .logitem{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--line-solid)}
+  .logitem:last-child{border-bottom:0}
+  .logitem .ld{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-faint);width:92px;flex:none}
+  .logitem .lmain{flex:1}
+  .logitem .lday{font-weight:700;font-size:14px}
+  .logitem .lnotes{color:var(--ink-soft);font-size:13px;margin-top:3px}
+  .logitem .lscore{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);flex:none}
+  .empty{text-align:center;padding:40px 20px;color:var(--ink-faint);font-style:italic;font-family:'Fraunces',serif}
+
+  .phase-block{margin-bottom:14px}
+  .phase-bar{display:flex;align-items:center;gap:13px;padding:14px 16px;background:var(--panel-2);
+    border:1px solid var(--line-solid);border-radius:12px}
+  .phase-bar .pn{font-family:'Fraunces',serif;font-size:18px;font-weight:600;flex:1}
+  .phase-bar .pdays{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint)}
+  .phase-bar .ptrack{width:120px;height:6px;background:var(--bg);border-radius:4px;overflow:hidden}
+  .phase-bar .pfill{height:100%;background:var(--amber);border-radius:4px}
+  .daylist{margin-top:8px;display:grid;gap:6px}
+  .dayrow{display:flex;align-items:center;gap:13px;padding:11px 14px;background:var(--panel);
+    border:1px solid var(--line-solid);border-radius:10px;cursor:pointer;transition:.16s}
+  .dayrow:hover{border-color:var(--amber);transform:translateX(3px)}
+  .dayrow .dnum{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-faint);width:46px;flex:none}
+  .dayrow .dttl{flex:1;font-size:14px;font-weight:600}
+  .dayrow .dstate{font-size:11px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:20px}
+  .dayrow.done{border-color:rgba(143,174,110,.4)}
+  .dayrow.done .dstate{background:rgba(143,174,110,.16);color:var(--sage)}
+  .dayrow.partial .dstate{background:rgba(233,162,59,.14);color:var(--amber)}
+  .dayrow.todo .dstate{background:var(--panel-2);color:var(--ink-faint)}
+  .dayrow.current{border-color:var(--coral)}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(10,8,6,.78);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line-solid);border-radius:16px;
+    padding:26px;max-width:460px;width:100%;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+  .modal h3{font-size:22px;font-weight:600;margin-bottom:6px}
+  .modal p{color:var(--ink-soft);font-size:13.5px;margin-bottom:14px;line-height:1.55}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--sage);color:#15140c;font-weight:700;font-size:13.5px;padding:12px 22px;
+    border-radius:11px;opacity:0;transition:.3s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .res h3{font-size:20px;font-weight:600;margin:22px 0 10px}
+  .res h3:first-child{margin-top:0}
+  .res p,.res li{color:var(--ink-soft);font-size:14px;line-height:1.65}
+  .res ul{padding-left:20px;margin:8px 0}
+  .res li{margin:5px 0}
+  .res .tag{font-family:'JetBrains Mono',monospace;color:var(--amber);font-size:13px}
+  .ipa{font-family:'JetBrains Mono',monospace;color:var(--coral)}
+  .loading{text-align:center;padding:60px;color:var(--ink-faint);font-family:'Fraunces',serif;font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brandrow">
+      <div class="brand">
+        <div class="kicker">60-Day Program · Spoken American English</div>
+        <h1>The Accent <em>Studio</em></h1>
+        <p>Daily drills, in-app voice recording and spaced-repetition practice for a natural American accent.</p>
+      </div>
+      <button class="setup-btn" id="setupBtn">⚙ Settings</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-v="dash">Dashboard</button>
+    <button class="tab" data-v="today">Today</button>
+    <button class="tab" data-v="plan">Full Plan</button>
+    <button class="tab" data-v="drills">Drills</button>
+    <button class="tab" data-v="recordings">Recordings</button>
+    <button class="tab" data-v="tracker">Tracker</button>
+    <button class="tab" data-v="method">Method</button>
+  </nav>
+
+  <div id="app"><div class="loading">Loading your studio…</div></div>
+
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   THE ACCENT STUDIO — standalone build (host anywhere)
+   Storage: IndexedDB (state + audio). No backend required.
+   ============================================================ */
+const PHASES = [
+  {id:1,name:"Foundation & The American R",range:[1,7],
+   blurb:"Set a baseline and master rhoticity — the single biggest tell of an American accent."},
+  {id:2,name:"The Vowel System",range:[8,14],
+   blurb:"Rebuild your vowels. American English vowels sit in different places than most other accents."},
+  {id:3,name:"Consonants & Connected Speech",range:[15,21],
+   blurb:"Flap T, glottal T, dark L and the linking that makes speech flow."},
+  {id:4,name:"Rhythm, Stress & Music",range:[22,30],
+   blurb:"Stress-timing and intonation — the melody that makes you sound native, not just correct."},
+  {id:5,name:"Refinement & Real-World Application",range:[31,60],
+   blurb:"Move from drills to spontaneous, conversational speech under real conditions."},
+];
+
+/* helper to build an exercise */
+const x=(t,d,min)=>({t,d,min});
+
+/* The 60-day curriculum. Each day: phase, title, why, exercises[], listen */
+const PLAN=[
+/* ---------- PHASE 1 ---------- */
+{p:1,title:"Baseline & The American Mouth",
+ why:"You cannot improve what you have not measured. Today you capture your starting point.",
+ ex:[
+  x("Record your baseline","Read the 'Rainbow Passage' (search it — public domain) aloud at natural pace. Save the audio. This is your Day 1 fingerprint.",8),
+  x("Mouth posture reset","Americans speak with a slightly relaxed jaw and the tongue held a touch further back. Say 'aaah' then settle into a neutral, loose-jaw resting position. Hold 60s.",5),
+  x("Vowel sweep","Slowly glide through: heed–hid–hayed–head–had–hod–hawed–hoed–hood–who'd. Feel each mouth shape. Repeat 5x.",7),
+  x("Self-assessment","Listen back to your recording. Note your 3 most obvious non-American features (often the R, the T, or flat rhythm).",5),
+ ],
+ listen:"Pick ONE American voice to be your model for 60 days — a podcaster, actor or YouTuber whose voice you like. Consistency of model beats variety."},
+
+{p:1,title:"Finding the American R",
+ why:"The American R is a constriction, not a tongue tap or trill. Build it once, use it everywhere.",
+ ex:[
+  x("The bunched R","Pull the back/sides of your tongue up toward your back teeth, tongue tip down and floating. Make a low growl: 'rrrrr'. No tip contact, no trill.",6),
+  x("R sustain","Hold a clean 'rrrr' for 8 seconds, 6 times. It should feel like a vowel you can sing.",5),
+  x("R + vowel glides","rrr-ah, rrr-ee, rrr-oh, rrr-oo. Keep the R constriction, then open into the vowel. 8 reps each.",8),
+  x("Mirror check","Watch your mouth. Your tongue tip should NOT touch the roof or teeth. Record 'red, right, around' and verify.",6),
+ ],
+ listen:"Listen for the R in your model's speech. Notice it appears even where your accent might drop it."},
+
+{p:1,title:"R at the Start of Words",
+ why:"Initial R sets the tone of a word. Lock it in before stacking complexity.",
+ ex:[
+  x("Warm-up R sustain","30 seconds of clean bunched 'rrrr' to re-find the position.",3),
+  x("Initial-R word ladder","red, run, right, road, rain, real, rich, room, rest, ready. 3 slow passes, then 2 at speed.",8),
+  x("R in phrases","'a red road', 'run right round', 'really rich rooms'. Keep every R constricted.",7),
+  x("Shadow & record","Shadow 2 minutes of your model. Then record yourself reading the word ladder; compare the R quality.",7),
+ ],
+ listen:"Count initial-R words in 1 minute of your model. Note how effortless their R sounds."},
+
+{p:1,title:"The NURSE Vowel — Stressed ER",
+ why:"Words like 'bird' and 'work' use an R-colored vowel. Mastering it removes a major accent tell.",
+ ex:[
+  x("Build the ER","From the bunched R, add voice and a tiny bit of mouth opening: 'errrr'. This single sound IS the vowel in 'bird'.",6),
+  x("NURSE word set","bird, word, work, her, first, learn, turn, world, nurse, early. Each one is just 'ER' wrapped in consonants. 3 passes.",8),
+  x("Minimal contrast","Compare a non-rhotic 'er' (cut short) vs full American ER. Exaggerate the American version 5x per word.",6),
+  x("Shadow & record","Shadow 2 min of model speech, then record the NURSE set. Confirm the R-color lasts the whole vowel.",6),
+ ],
+ listen:"Track every 'bird/work/her'-type word in your model for 2 minutes."},
+
+{p:1,title:"The Schwa-R — Unstressed ER",
+ why:"Endings like 'water' and 'mother' use a quick, light R-colored schwa. Get this and you sound natural instantly.",
+ ex:[
+  x("Light ER","Same R-color as NURSE but shorter, lower energy, unstressed: the end of 'teacher'.",5),
+  x("lettER word set","water, mother, better, after, never, under, doctor, dollar, sister, summer. Light, quick final ER. 3 passes.",8),
+  x("Two-syllable rhythm","Say each word as STRONG-weak: 'WA-ter', not 'wa-TER'. The ER must stay unstressed but still R-colored.",6),
+  x("Shadow & record","Shadow 2 min, then record the set. The final ER should be present but never heavy.",6),
+ ],
+ listen:"Notice how your model's word-final ER is quick and light, never dropped, never stressed."},
+
+{p:1,title:"R After Vowels",
+ why:"'car', 'hard', 'more', 'here' — post-vowel R is where non-rhotic accents most often slip.",
+ ex:[
+  x("Warm-up","20s R sustain + 'water/bird' to re-find both ER types.",3),
+  x("R-cluster ladder","car, hard, far, more, four, here, near, fear, hair, care, fire, hour. Glide vowel INTO the R, do not drop it.",9),
+  x("Sentence drill","'The car is parked far from here.' 'There are four more hours.' Hit every R.",7),
+  x("Shadow & record","Shadow 3 min of model, record the sentences, compare every R.",6),
+ ],
+ listen:"Pick any sentence your model says with 3+ R's and replay it 5 times."},
+
+{p:1,title:"R Consolidation + Re-record",
+ why:"End of week 1. Prove your rhoticity has improved against a fresh measurement.",
+ ex:[
+  x("Full R review","Run through: initial R, NURSE, lettER, post-vowel R. 2 minutes total, all word sets.",8),
+  x("R-loaded passage","Read aloud: 'Rural travelers rarely return early — they prefer warmer mornings near the harbor.' 5 slow, 3 fast.",7),
+  x("Re-record baseline","Record the Rainbow Passage again. Compare directly with your Day 1 audio.",8),
+  x("Progress note","Rate your R alone vs Day 1. Log a tracker session and rate all six skills honestly.",4),
+ ],
+ listen:"Listen to Day 1 and Day 7 recordings back to back. The R difference should be audible."},
+
+/* ---------- PHASE 2 ---------- */
+{p:2,title:"The Bright TRAP Vowel",
+ why:"The American 'a' in 'cat' is brighter and more open than in most accents. It is highly recognizable.",
+ ex:[
+  x("Open the TRAP","Drop your jaw, spread slightly, raise the tongue front: a bright 'æ' as in 'cat'. Exaggerate it.",5),
+  x("TRAP word set","cat, bad, man, hand, ask, last, dance, can, family, happy. Keep that bright open vowel. 3 passes.",8),
+  x("The nasal lift","Before n/m the TRAP vowel lifts and tenses ('man', 'hand', 'can'). Practice this slight glide.",7),
+  x("Shadow & record","Shadow 3 min, record the set, confirm the vowel is bright and forward, not dull.",7),
+ ],
+ listen:"Catch every 'cat/man/dance' vowel in 2 minutes of your model."},
+
+{p:2,title:"The Merged LOT–THOUGHT Vowel",
+ why:"Most General American speakers pronounce 'cot' and 'caught' identically — one open back vowel.",
+ ex:[
+  x("Find the vowel","An open, relaxed 'ah' with the jaw low: the vowel in 'hot' and 'dog'.",5),
+  x("Merged word set","hot, dog, on, off, lost, talk, call, want, thought, coffee — all share one open 'ah'-ish vowel. 3 passes.",8),
+  x("No rounding","Avoid heavy lip-rounding on 'caught/thought'. Keep it open and relaxed like 'cot'.",6),
+  x("Shadow & record","Shadow 3 min, record the set, verify cot=caught for you.",7),
+ ],
+ listen:"Notice your model does not distinguish 'cot' and 'caught' — most Americans do not."},
+
+{p:2,title:"Tense vs Lax — sheep / ship",
+ why:"American English contrasts long-tense and short-lax vowels. Mixing them up is a clear accent marker.",
+ ex:[
+  x("FLEECE vs KIT","'sheep' (long, smiley, tense) vs 'ship' (short, relaxed). Exaggerate the difference 10x.",6),
+  x("GOOSE vs FOOT","'pool' (long, rounded) vs 'pull' (short, relaxed). 10 contrast reps.",6),
+  x("Minimal pair drill","sheep/ship, feel/fill, leave/live, pool/pull, fool/full. Say each pair 5x, partner cannot guess wrongly.",8),
+  x("Shadow & record","Shadow 3 min, record the pairs, confirm clear length + quality contrast.",6),
+ ],
+ listen:"Listen for tense vs lax pairs in your model — the difference is length AND mouth shape."},
+
+{p:2,title:"The Schwa — Engine of Rhythm",
+ why:"The schwa is the most common sound in English. Reducing unstressed vowels to schwa is THE secret to American rhythm.",
+ ex:[
+  x("Pure schwa","A tiny, neutral, lazy 'uh' — zero effort. The first sound of 'about', last of 'sofa'.",5),
+  x("Reduce unstressed vowels","banana → buh-NAN-uh. photograph → PHO-tuh-graf. Every unstressed vowel collapses to schwa.",8),
+  x("Function-word reduction","'to, of, for, the, a, and, can' all reduce: 'I want to go' → 'I wanna go', 'cup of tea' → 'cup-uh-tea'.",8),
+  x("Shadow & record","Shadow 3 min focusing only on reduced syllables. Record a paragraph and check your schwas.",6),
+ ],
+ listen:"This is the big one. Notice how MUCH of your model's speech is unstressed schwa."},
+
+{p:2,title:"GOAT & FACE Glides",
+ why:"American 'go' and 'day' are gliding diphthongs. Flattening them into pure vowels sounds non-native.",
+ ex:[
+  x("FACE glide","'day' = eh→ee glide. Slow it: 'eh-ee'. Then natural speed. Words: day, make, play, name, late.",6),
+  x("GOAT glide","'go' = oh→oo glide, starting more central in American English. Words: go, no, know, home, boat, slow.",7),
+  x("Glide vs flat","Say 'go' flat (non-American) then with the full glide. Exaggerate the glide 8x.",6),
+  x("Shadow & record","Shadow 3 min, record the GOAT/FACE sets, confirm audible glides.",6),
+ ],
+ listen:"Hear the movement inside 'no' and 'day' — these are never single static vowels."},
+
+{p:2,title:"PRICE, MOUTH & CHOICE",
+ why:"Three more gliding diphthongs. Clean glides keep your speech crisp and native.",
+ ex:[
+  x("PRICE","'I, my, time, like, five, night' — ah→ee glide. 3 passes.",6),
+  x("MOUTH","'now, how, out, down, about, house' — ah→oo glide. 3 passes.",6),
+  x("CHOICE","'boy, toy, voice, point, enjoy, noise' — aw→ee glide. 3 passes.",6),
+  x("Shadow & record","Shadow 3 min, record all three sets, verify each diphthong moves cleanly.",7),
+ ],
+ listen:"Track diphthongs in your model — they are quick but always complete."},
+
+{p:2,title:"Vowel Consolidation + Minimal Pairs",
+ why:"End of week 2. Stress-test your whole vowel system under pressure.",
+ ex:[
+  x("Vowel sweep review","Run the heed–hid–...–who'd sweep, plus TRAP, LOT-THOUGHT, all diphthongs. 3 minutes.",8),
+  x("Minimal pair gauntlet","sheep/ship, cot/caught, bat/bet, full/fool, cap/cup. 5 reps each pair, fast.",7),
+  x("Vowel-rich passage","Read the Rainbow Passage again — this time focus only on vowel quality.",7),
+  x("Re-record & log","Record the passage, compare to Day 1 and Day 7. Log a tracker session.",6),
+ ],
+ listen:"Compare your three recordings so far. Vowels should be noticeably more American."},
+
+/* ---------- PHASE 3 ---------- */
+{p:3,title:"The Flap T",
+ why:"'water' sounds like 'wadder' in American English. The flap T is everywhere and instantly American.",
+ ex:[
+  x("Make the flap","A T or D between vowels becomes a quick tongue tap — like a fast 'd'. Say 'water' as 'wadder'.",6),
+  x("Flap-T word set","water, better, city, letter, butter, party, little, matter, pretty, daughter. 3 passes.",8),
+  x("Flap across words","'get it', 'put it on', 'a lot of' → 'gerit', 'purit on', 'a lodda'. The flap crosses word boundaries.",8),
+  x("Shadow & record","Shadow 3 min, record the set + phrases, confirm every medial T flaps.",6),
+ ],
+ listen:"Count flap-T words in 1 minute of your model — there will be many."},
+
+{p:3,title:"The Glottal T",
+ why:"In 'button' and 'mountain' the T becomes a glottal stop. Knowing when to flap vs glottalize is key.",
+ ex:[
+  x("Make the glottal stop","Close your throat briefly — the catch in 'uh-oh'. That replaces the T in 'button'.",5),
+  x("Glottal-T word set","button, mountain, kitten, cotton, certain, important, fountain, written. T → throat catch + N.",8),
+  x("Flap vs glottal sort","Sort 10 words: medial T before a vowel = flap (water); T before syllabic N = glottal (button).",8),
+  x("Shadow & record","Shadow 3 min, record both sets, confirm correct choice for each word.",6),
+ ],
+ listen:"Notice your model never fully releases the T in 'important' or 'mountain'."},
+
+{p:3,title:"Final T & T-Clusters",
+ why:"Word-final and clustered T's behave specially in American speech — often held, glottalized, or dropped.",
+ ex:[
+  x("Held final T","'cat', 'right', 'what' — the T is often unreleased: tongue goes up, no puff of air.",6),
+  x("T in clusters","'don't know' → 'dono', 'want to' → 'wanna', 'first time' the first T may vanish.",8),
+  x("Sentence drill","'I don't want to', 'what did you get', 'right at the start'. Apply held/dropped/flapped T correctly.",8),
+  x("Shadow & record","Shadow 3 min, record the sentences, check natural T behavior.",6),
+ ],
+ listen:"Listen for how often final T is NOT a crisp released sound in casual American speech."},
+
+{p:3,title:"The Dark L",
+ why:"American L is 'dark' (velarized) in most positions — the back of the tongue lifts. This thickens your L.",
+ ex:[
+  x("Make the dark L","Tip touches the ridge, but lift the BACK of the tongue too. Say 'full' — feel the back lift.",6),
+  x("Dark-L word set","ball, milk, feel, cold, help, all, well, real, school, people. 3 passes.",8),
+  x("Light vs dark","Initial L can be lighter ('like'); final/coda L is dark ('feel'). Contrast 6 word pairs.",7),
+  x("Shadow & record","Shadow 3 min, record the dark-L set, confirm the thicker back-of-tongue quality.",6),
+ ],
+ listen:"Notice how 'thick' your model's L sounds in 'well', 'all', 'cold'."},
+
+{p:3,title:"TH Sounds & Yod-Dropping",
+ why:"Clean TH plus 'yod-dropping' ('Tuesday' = 'Toozday') sharpen your American profile.",
+ ex:[
+  x("Two TH sounds","Voiced 'this/that/the' vs voiceless 'think/thanks/three'. Tongue tip lightly between teeth.",6),
+  x("TH word set","the, this, that, they, think, three, thanks, breathe, mother, with. 3 passes.",6),
+  x("Yod-dropping","After t/d/n, Americans drop the 'y': Tuesday→Toozday, news→nooz, student→stoodent, duty→dooty.",8),
+  x("Shadow & record","Shadow 3 min, record both sets, confirm clean TH and dropped yods.",6),
+ ],
+ listen:"Catch 'new', 'Tuesday', 'student' in your model — listen for the missing 'y'."},
+
+{p:3,title:"Linking & Connected Speech",
+ why:"Native speech connects words into smooth chunks. Choppy word-by-word speech sounds foreign.",
+ ex:[
+  x("Consonant-to-vowel linking","'an apple' → 'a-napple', 'pick it up' → 'pi-ki-tup'. Final consonant joins the next vowel.",7),
+  x("Linking with R and W/Y","'I am' → 'I-yam', 'go away' → 'go-waway', 'far away' → 'fa-raway'.",7),
+  x("Chunked sentences","Read 3 sentences as connected blocks, no gaps between words within a thought group.",8),
+  x("Shadow & record","Shadow 3 min, record the sentences, confirm smooth linking.",6),
+ ],
+ listen:"Notice your model speaks in connected chunks, not separated words."},
+
+{p:3,title:"Consonant Consolidation",
+ why:"End of week 3. Integrate flap T, glottal T, dark L and linking into running speech.",
+ ex:[
+  x("Consonant review","Run flap-T, glottal-T, dark-L, TH and yod sets. 3 minutes.",8),
+  x("Connected-speech passage","Read a paragraph applying ALL consonant rules + linking simultaneously.",8),
+  x("Re-record baseline","Record the Rainbow Passage. Compare with Days 1, 7, 14.",7),
+  x("Progress log","Log a tracker session, rate all six skills.",4),
+ ],
+ listen:"Your week 3 recording should sound markedly smoother and more connected."},
+
+/* ---------- PHASE 4 ---------- */
+{p:4,title:"Word Stress",
+ why:"Every multi-syllable word has one strong syllable. Wrong stress is one of the hardest accent tells to hear in yourself.",
+ ex:[
+  x("Hear the stress","Tap the table on the strong syllable: 'a-MER-i-can', 'PHO-to-graph', 'pho-TOG-ra-phy'.",6),
+  x("Stress-shift pairs","Note how stress moves: 'PHOtograph / phoTOGraphy / photoGRAPHic'. Practice 6 such families.",8),
+  x("Noun vs verb stress","'REcord (noun) / reCORD (verb)', 'PREsent / preSENT'. Drill 6 pairs.",7),
+  x("Shadow & record","Shadow 3 min, record a word list, verify correct stress placement.",6),
+ ],
+ listen:"When unsure of a word's stress, look it up — do not guess."},
+
+{p:4,title:"Content vs Function Words",
+ why:"Americans stress content words (nouns, verbs) and swallow function words (the, of, to). This creates the rhythm.",
+ ex:[
+  x("Identify the two types","In any sentence, mark CONTENT (carry meaning) vs FUNCTION (grammar glue) words.",6),
+  x("Stress only content","'I went TO the STORE to BUY some BREAD' — only caps get stress, rest reduces.",8),
+  x("Reduction practice","Read 3 sentences hitting only content words hard, reducing all function words to schwa.",8),
+  x("Shadow & record","Shadow 3 min, record the sentences, confirm the strong-weak pattern.",6),
+ ],
+ listen:"Hear how your model almost throws away function words."},
+
+{p:4,title:"Stress-Timed Rhythm",
+ why:"English is stress-timed: stressed syllables fall at regular beats, and everything between gets compressed.",
+ ex:[
+  x("The beat","Clap a steady beat. Fit each sentence so stressed syllables land ON the claps, regardless of how many weak syllables sit between.",7),
+  x("Compression drill","'CATS eat MICE' vs 'the CATS will have EATen the MICE' — both take the same time. Drill 5 such pairs.",8),
+  x("Rhythmic reading","Read a paragraph to a metronome at 60 bpm, one stress per beat.",8),
+  x("Shadow & record","Shadow 3 min, record the paragraph, check for even stress timing.",6),
+ ],
+ listen:"Feel the underlying pulse in your model's speech — it is almost musical."},
+
+{p:4,title:"Intonation Contours",
+ why:"Pitch movement carries meaning and attitude. Flat or wrongly-shaped intonation sounds non-native or robotic.",
+ ex:[
+  x("Statement fall","Statements glide DOWN at the end. 'I live in New York.' Exaggerate the final fall 8x.",6),
+  x("Yes/no rise vs Wh-fall","'Are you coming?' rises. 'Where are you going?' falls. Drill 6 of each.",8),
+  x("List intonation","'red, green, blue, and yellow' — rises on each item, falls on the last.",6),
+  x("Shadow & record","Shadow 3 min copying pitch exactly, record 6 sentences, check contours.",7),
+ ],
+ listen:"Trace the pitch line of your model's sentences with your hand in the air."},
+
+{p:4,title:"Thought Groups & Pausing",
+ why:"Native speakers chunk speech into thought groups with deliberate pauses. This adds clarity and a natural feel.",
+ ex:[
+  x("Mark the chunks","Take a paragraph; mark / where a natural pause belongs. Each chunk is one idea.",6),
+  x("One contour per chunk","Each thought group gets its own intonation arc — usually rising mid-sentence, falling at the end.",8),
+  x("Paced reading","Read the paragraph honoring every pause. Do not rush through chunk boundaries.",8),
+  x("Shadow & record","Shadow 3 min noting where the model pauses, record your paragraph.",6),
+ ],
+ listen:"Notice your model's pauses are purposeful, not random gasps for air."},
+
+{p:4,title:"Contrastive & Emphatic Stress",
+ why:"Americans move stress to the word that carries the key contrast. It signals meaning precisely.",
+ ex:[
+  x("Shift the focus","'I didn't say HE stole it' vs 'I didn't say he STOLE it' — same words, stress changes meaning. Drill 6.",8),
+  x("Emphasis for emotion","Stretch and raise pitch on the emphasized word: 'That was AMAZING.'",6),
+  x("Mini-dialogue","Perform a 4-line dialogue, choosing the right contrastive stress in each line.",8),
+  x("Shadow & record","Shadow 3 min of expressive speech, record the dialogue.",6),
+ ],
+ listen:"Hear how your model spotlights one key word per sentence."},
+
+{p:4,title:"Casual Reductions",
+ why:"'gonna, wanna, gotta, kinda, lemme' — relaxed forms are not lazy, they are native. Avoiding them sounds stiff.",
+ ex:[
+  x("Core reductions","gonna (going to), wanna (want to), gotta (got to), kinda (kind of), lemme (let me), gimme (give me).",6),
+  x("'Did you / what are you'","'whatcha doing', 'didja see', 'whaddaya want'. Drill 6 reduced question forms.",8),
+  x("Reduced conversation","Read a casual dialogue using natural reductions throughout.",8),
+  x("Shadow & record","Shadow 3 min of casual speech, record the dialogue, confirm relaxed forms.",6),
+ ],
+ listen:"Casual American speech is FULL of these — count them in 1 minute of relaxed talk."},
+
+{p:4,title:"Integration Monologue",
+ why:"Drills work in isolation. Today you fuse everything into continuous, self-generated speech.",
+ ex:[
+  x("Full warm-up","R sustain, vowel sweep, flap-T set, intonation glides. 5 minutes.",5),
+  x("Plan a 2-minute talk","Pick a topic you know well. Outline 4 points. You will speak, not read.",6),
+  x("Deliver the monologue","Record yourself speaking for 2 minutes, applying every skill consciously.",8),
+  x("Self-review","Listen back. Note 2 things that improved and 2 weak spots for the next phase.",6),
+ ],
+ listen:"Self-generated speech is harder than reading — that gap is your real progress target."},
+
+{p:4,title:"30-Day Milestone Assessment",
+ why:"Halfway point. Measure hard, celebrate honestly, and set the focus for phase 5.",
+ ex:[
+  x("Full re-record","Record the Rainbow Passage AND your 2-minute monologue.",8),
+  x("Day 1 vs Day 30","Listen to Day 1 and today back to back. Write down every audible improvement.",7),
+  x("Score yourself","Rate all six skills 1–10. Be specific about your weakest two — they drive phase 5.",6),
+  x("Log the milestone","Save a full tracker session. Take a moment — you are halfway to the goal.",4),
+ ],
+ listen:"This comparison is the most motivating thing you will do. Do not skip it."},
+
+/* ---------- PHASE 5 : 31-60 ---------- */
+{p:5,title:"Conversational Shadowing",
+ why:"Phase 5 shifts from drills to real speech. Start by shadowing natural dialogue, not scripted reading.",
+ ex:[
+  x("Warm-up","3-min full warm-up: R, vowels, flap-T, intonation.",3),
+  x("Close shadowing","Shadow 5 minutes of conversational content (podcast/interview), staying within 1 second of the speaker.",8),
+  x("Echo shadowing","Replay 5 short lines; reproduce each from memory with identical melody.",8),
+  x("Record & compare","Record one shadowed minute, compare side-by-side with the original.",6),
+ ],
+ listen:"Conversational speech is faster and messier than scripted — match its texture."},
+
+{p:5,title:"Self-Talk Narration",
+ why:"Narrating your own actions builds spontaneous fluency with zero translation lag.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Narrate your morning","Out loud, describe what you are doing as you do it, in American accent, for 5 minutes.",7),
+  x("Describe a photo","Pick any photo; describe it in detail for 2 minutes without stopping.",7),
+  x("Record & flag","Record 2 minutes of free narration, flag the 3 weakest sounds.",6),
+ ],
+ listen:"Notice which sounds collapse when you stop concentrating — those are your real targets."},
+
+{p:5,title:"The Phone Voice",
+ why:"Phone audio strips visual cues, so pronunciation alone must carry. Great training pressure.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Voicemail drill","Record a 45-second 'voicemail' three times, improving clarity and rhythm each take.",7),
+  x("Numbers & spelling","Say phone numbers, dates and spell names aloud — clarity under American intonation.",7),
+  x("Mock call","Improvise a 3-minute phone conversation, both sides, switching naturally.",7),
+ ],
+ listen:"Phone speech is slightly clearer and more deliberate — but still rhythmic."},
+
+{p:5,title:"Dialogue Role-Play",
+ why:"Switching between speakers trains flexible intonation and quick reset of mouth posture.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Two-voice scene","Perform a short dialogue playing BOTH characters with distinct but American delivery.",8),
+  x("Reaction lines","Drill quick reactions: 'No way!', 'Are you serious?', 'That's awesome.' — full melody.",6),
+  x("Record the scene","Record the full dialogue, check that each line lands naturally.",7),
+ ],
+ listen:"Conversational reactions carry strong, fast intonation — copy that energy."},
+
+{p:5,title:"Question Intonation in Conversation",
+ why:"Real conversation is full of questions. Their melody must be automatic, not calculated.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Question marathon","Ask 20 varied questions aloud — yes/no, wh-, tag, echo — each with correct contour.",8),
+  x("Uptalk awareness","Practice mild statement-uptalk where natural, but keep most statements falling.",6),
+  x("Record interview","Record yourself asking and answering 6 interview questions.",7),
+ ],
+ listen:"Notice the variety of question melodies in a real interview."},
+
+{p:5,title:"Listening Discrimination Day",
+ why:"You can only produce what you can hear. Sharpening perception accelerates production.",
+ ex:[
+  x("Minimal-pair listening","Have a tool/app play minimal pairs; identify which you heard. 20 rounds.",7),
+  x("Transcribe a clip","Transcribe 60 seconds of fast speech exactly, including reductions ('wanna', 'gonna').",9),
+  x("Shadow the same clip","Shadow the clip you transcribed, now that you know every word.",7),
+  x("Note blind spots","Write the contrasts you struggle to HEAR — they need extra production drilling.",4),
+ ],
+ listen:"Perception gaps cause production gaps. Find yours today."},
+
+{p:5,title:"Week 5 Review + Record",
+ why:"Checkpoint. Confirm conversational skills are consolidating.",
+ ex:[
+  x("Skill review","Run a fast pass of all four phase-1-to-4 skill areas. 6 minutes.",6),
+  x("Free monologue","Record a 3-minute unscripted talk on any topic.",8),
+  x("Compare","Compare with your Day 30 monologue.",6),
+  x("Log session","Rate all six skills, note the gap to native.",4),
+ ],
+ listen:"Track the trend line across your weekly recordings."},
+
+{p:5,title:"Speed Shadowing",
+ why:"Native speech is fast. Training at speed builds the muscle memory to keep up without distortion.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Fast shadowing","Shadow rapid speech (fast podcast/standup) for 6 minutes. Accuracy over completeness.",8),
+  x("0.9x then 1.0x","Shadow a clip at 0.9x, then full speed. Keep all flaps and reductions intact.",7),
+  x("Record fast read","Record a paragraph at brisk pace, confirm rhythm survives the speed.",7),
+ ],
+ listen:"At speed, only rhythm and reductions keep speech intelligible — protect them."},
+
+{p:5,title:"Impromptu Speaking",
+ why:"Spontaneous speech with no prep is the truest test of an internalized accent.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("60-second topics","Draw 5 random topics; speak 60 seconds on each with no prep.",9),
+  x("No-filler challenge","Repeat one topic trying to minimize 'um' — replace with American fillers ('like', 'you know').",6),
+  x("Record best take","Record your strongest 90-second impromptu, review it.",7),
+ ],
+ listen:"Spontaneous speech reveals your true default accent — that is what we are reshaping."},
+
+{p:5,title:"Reductions at Speed",
+ why:"Under spontaneous pressure, reductions are the first thing to disappear. Reinforce them.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Reduction sprints","Speed-read sentences loaded with gonna/wanna/gotta/whatcha. 3 fast passes.",7),
+  x("Connected-speech paragraph","Read a paragraph applying every linking + reduction rule at conversational pace.",8),
+  x("Record & verify","Record 2 minutes of fast speech, confirm reductions held up.",7),
+ ],
+ listen:"Fast native speech is mostly reductions and links — embrace it."},
+
+{p:5,title:"Reading Aloud at Pace",
+ why:"Fluent expressive reading transfers directly to confident speaking.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Cold read","Read an unfamiliar article aloud — accent, rhythm and intonation correct on the first pass.",8),
+  x("Expressive re-read","Re-read the same text with full expression and emphasis.",7),
+  x("Record best version","Record your most natural read, review for any robotic stretches.",7),
+ ],
+ listen:"Compare professional audiobook narration with your read."},
+
+{p:5,title:"Storytelling",
+ why:"Stories demand dynamic pitch, pacing and emphasis — the full expressive range of native speech.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Tell a 3-minute story","Recount a real personal story with deliberate pacing, suspense and pitch variety.",8),
+  x("Punchline timing","Practice landing the key moment with a pause and pitch shift.",6),
+  x("Record & review","Record the story, check that intonation carries the drama.",7),
+ ],
+ listen:"Notice how skilled storytellers vary pace and pitch constantly."},
+
+{p:5,title:"Fillers & Natural Hesitation",
+ why:"Native speakers hesitate in characteristic ways. The right fillers make pauses sound native, not nervous.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("American fillers","Practice 'like', 'you know', 'I mean', 'kind of', 'so' as natural connective hesitation.",6),
+  x("Hesitation with rhythm","Insert fillers without breaking your sentence rhythm or dropping the accent.",7),
+  x("Record casual talk","Record 2 minutes of relaxed talk using fillers naturally, not excessively.",7),
+ ],
+ listen:"Catch the fillers in casual American speech — they are everywhere and they sound easy."},
+
+{p:5,title:"Week 6 Review + Record",
+ why:"Checkpoint. Speed and spontaneity should be stabilizing.",
+ ex:[
+  x("Skill review","Fast review pass of all skill areas. 6 minutes.",6),
+  x("Impromptu recording","Record a 3-minute fully spontaneous talk.",8),
+  x("Compare","Compare with Day 37.",6),
+  x("Log session","Rate all six skills.",4),
+ ],
+ listen:"Your spontaneous speech should be closing in on your read-aloud quality."},
+
+{p:5,title:"Weak-Spot Diagnostic",
+ why:"By now your two or three persistent weak spots are clear. The next days target them surgically.",
+ ex:[
+  x("Diagnostic recording","Record a varied 4-minute sample: reading, monologue, dialogue.",8),
+  x("Pinpoint failures","List every recurring slip — specific sounds, specific contexts.",8),
+  x("Rank top 3","Rank your three biggest issues. These are the focus of days 46–48.",5),
+  x("Targeted word list","Build a personal 20-word drill list around your weak spots.",6),
+ ],
+ listen:"Be brutally specific. 'My R' is too vague — 'my R after vowels' is actionable."},
+
+{p:5,title:"Weak-Spot Drill A",
+ why:"Day one of focused remediation — attack weak spot #1 with high-rep precision.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Isolation drill","Drill weak spot #1 in isolation, then in your personal word list. 30+ reps.",9),
+  x("In-context drill","Use the target sound in 10 sentences you build yourself.",8),
+  x("Record & verify","Record the sentences, confirm measurable improvement on spot #1.",6),
+ ],
+ listen:"High repetition on one narrow target produces fast, visible gains."},
+
+{p:5,title:"Weak-Spot Drill B",
+ why:"Attack weak spot #2 with the same precision.",
+ ex:[
+  x("Warm-up + review A","3-min warm-up plus a quick check of yesterday's target.",4),
+  x("Isolation drill","Drill weak spot #2 in isolation and in your word list. 30+ reps.",9),
+  x("In-context drill","Build and read 10 sentences featuring spot #2.",8),
+  x("Record & verify","Record and confirm improvement.",6),
+ ],
+ listen:"Keep the previous day's gain alive while building the new one."},
+
+{p:5,title:"Weak-Spot Drill C",
+ why:"Attack weak spot #3, then briefly integrate all three.",
+ ex:[
+  x("Warm-up + review A&B","4-min warm-up plus a check of the two prior targets.",5),
+  x("Isolation drill","Drill weak spot #3 in isolation and in context. 30+ reps.",8),
+  x("Triple integration","Read 6 sentences that combine all three weak spots.",7),
+  x("Record & verify","Record the integration set, confirm all three improved.",6),
+ ],
+ listen:"Integration is where remediation becomes permanent."},
+
+{p:5,title:"Minimal Pairs Gauntlet",
+ why:"Rapid contrast drilling sharpens both perception and production of your hardest distinctions.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Personal pair set","Build minimal pairs around YOUR weak spots; drill 12 pairs, 5 reps each.",8),
+  x("Speed round","Run the full set fast — listener must never mishear you.",7),
+  x("Record & self-test","Record the set, play back blind, check you can tell the pairs apart.",7),
+ ],
+ listen:"If you can produce a clean contrast at speed, the distinction is learned."},
+
+{p:5,title:"Tongue Twisters at Speed",
+ why:"Twisters force articulator precision and stamina — accent under maximum mechanical load.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Targeted twisters","Pick twisters loaded with your weak sounds; slow first, then accelerate.",8),
+  x("Accent-intact challenge","Speed up only as fast as you can keep flaps, R's and rhythm correct.",7),
+  x("Record fastest clean take","Record your fastest version with the accent fully intact.",7),
+ ],
+ listen:"Speed without accuracy is noise — accuracy first, then pace."},
+
+{p:5,title:"Week 7 Review + Record",
+ why:"Checkpoint. Confirm your weak spots have genuinely closed.",
+ ex:[
+  x("Skill review","Fast review of all skill areas. 6 minutes.",6),
+  x("Weak-spot re-test","Re-record the Day 45 diagnostic sample.",8),
+  x("Compare","Compare with Day 45 — the weak spots should be measurably better.",6),
+  x("Log session","Rate all six skills.",4),
+ ],
+ listen:"Your three weak spots should no longer be the first thing you hear."},
+
+{p:5,title:"Emotional Range",
+ why:"Native speech changes shape with emotion. A one-tone accent, however accurate, still sounds non-native.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Same line, six emotions","Say one sentence as excited, bored, angry, sad, surprised, sarcastic.",7),
+  x("Emotional monologue","Deliver a 2-minute monologue with a genuine emotional arc.",8),
+  x("Record & review","Record it; confirm the accent holds across all emotions.",7),
+ ],
+ listen:"Notice how pitch range widens with emotion in native speech."},
+
+{p:5,title:"Register Shifting",
+ why:"Americans shift between formal and casual registers fluidly. Command of both signals true fluency.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Formal version","Deliver a topic in formal register — fuller forms, measured pace.",7),
+  x("Casual version","Deliver the SAME topic casually — heavy reductions, relaxed rhythm, fillers.",7),
+  x("Record both","Record both versions, confirm each sounds natively appropriate.",8),
+ ],
+ listen:"Hear how the same person sounds different in an interview vs with friends."},
+
+{p:5,title:"Presentation Voice",
+ why:"Public-facing speech needs projection and clarity while keeping a natural accent.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Deliver a 3-min talk","Present a prepared topic with projection, clear structure and confident pacing.",8),
+  x("Emphasis mapping","Mark and hit the key emphasized words in your talk.",6),
+  x("Record & review","Record the presentation, check clarity plus natural rhythm.",7),
+ ],
+ listen:"Study a strong public speaker — clear, projected, still conversational."},
+
+{p:5,title:"Accent Under Pressure",
+ why:"The final test: keeping your accent while your attention is split. This is real-world readiness.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Speak while distracted","Speak on a topic while doing a simple task (walking, tidying). Keep the accent.",7),
+  x("Quick-fire Q&A","Have someone fire rapid questions; answer instantly in accent.",8),
+  x("Record pressure test","Record a pressured speaking sample, review for accent slippage.",7),
+ ],
+ listen:"Slippage under pressure shows what is automatic vs still effortful."},
+
+{p:5,title:"Long-Form Shadowing",
+ why:"Sustained shadowing builds the endurance to hold the accent across long, real conversations.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("12-minute shadow","Shadow a continuous 12-minute clip without breaks. Hold quality to the end.",13),
+  x("Stamina check","Note where fatigue degrades the accent; that marks your endurance ceiling.",4),
+  x("Record final 2 minutes","Record the last 2 minutes of shadowing — confirm quality held.",5),
+ ],
+ listen:"Endurance matters: real conversations are not 2 minutes long."},
+
+{p:5,title:"Mock Conversation Marathon",
+ why:"A long unscripted conversation is the closest thing to the real world. Today you simulate it end to end.",
+ ex:[
+  x("Warm-up","3-min warm-up.",3),
+  x("Two-sided conversation","Improvise a 6-minute conversation playing both speakers — questions, answers, reactions, all in accent.",8),
+  x("Topic switching","Mid-conversation, switch topics three times without dropping rhythm or accent.",7),
+  x("Record & audit","Record the full conversation, then audit it for any sound that consistently slips.",7),
+ ],
+ listen:"Real conversation mixes every skill at once — this is the integration test."},
+
+{p:5,title:"Week 8 Review + Record",
+ why:"Final checkpoint before assessment. Confirm advanced prosody is in place.",
+ ex:[
+  x("Skill review","Fast review of all skill areas. 6 minutes.",6),
+  x("Expressive monologue","Record a 4-minute expressive, register-aware monologue.",9),
+  x("Compare","Compare with every prior weekly recording.",6),
+  x("Log session","Rate all six skills.",4),
+ ],
+ listen:"You should now sound dynamic and natural, not just accurate."},
+
+{p:5,title:"Final Assessment Recording",
+ why:"Capture the definitive 'after' sample to set beside Day 1.",
+ ex:[
+  x("Full warm-up","5-min complete warm-up across all skills.",5),
+  x("Re-record the passage","Record the Rainbow Passage one final time.",6),
+  x("Final monologue","Record a 4-minute monologue covering reading, narration and emotion.",9),
+  x("Mock conversation","Record a 5-minute improvised conversation, both sides.",8),
+ ],
+ listen:"This is your graduation tape. Give it your best."},
+
+{p:5,title:"Compare, Celebrate & Maintain",
+ why:"Measure the full transformation and build the routine that keeps the accent for life.",
+ ex:[
+  x("Day 1 vs Day 60","Listen to your first and final recordings back to back. Write down every change.",8),
+  x("Final scorecard","Rate all six skills. Compare against Day 1 and Day 30.",6),
+  x("Build a maintenance plan","Design a 15-minute, 3x-per-week upkeep routine: shadowing + weak-spot drill + recording.",7),
+  x("Celebrate","You completed a 60-day transformation. Acknowledge the work — then keep speaking.",4),
+ ],
+ listen:"Accent is a skill, not a switch. Maintenance keeps it sharp."},
+];
+
+const SKILLS=[
+  {k:'r',label:'The R Sound',color:'#e9a23b'},
+  {k:'vowels',label:'Vowels',color:'#e0734a'},
+  {k:'t',label:'T & Consonants',color:'#8fae6e'},
+  {k:'rhythm',label:'Rhythm & Stress',color:'#7fa8c4'},
+  {k:'intonation',label:'Intonation',color:'#c98bb9'},
+  {k:'fluency',label:'Fluency & Flow',color:'#d9b86a'},
+];
+/* ---------------- STORAGE: IndexedDB (works on any static host) ---------- */
+const DB_NAME='accentStudioDB', DB_VER=1, STATE_KEY='state';
+let _db=null, _mem={}, _idbOk=true;
+
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    let req;
+    try{ req=indexedDB.open(DB_NAME,DB_VER); }catch(e){ return rej(e); }
+    req.onupgradeneeded=()=>{ const db=req.result;
+      if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+      if(!db.objectStoreNames.contains('audio')) db.createObjectStore('audio');
+    };
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>rej(req.error);
+  });
+}
+async function idbReady(){
+  if(_db) return _db;
+  if(!_idbOk) return null;
+  try{ _db=await idbOpen(); }catch(e){ _idbOk=false; _db=null; }
+  return _db;
+}
+function idbDo(store,mode,fn){
+  return new Promise(async (res,rej)=>{
+    const db=await idbReady();
+    if(!db) return rej(new Error('no-idb'));
+    let out;
+    const tx=db.transaction(store,mode); const st=tx.objectStore(store);
+    const r=fn(st); if(r) r.onsuccess=()=>{ out=r.result; };
+    tx.oncomplete=()=>res(out); tx.onerror=()=>rej(tx.error);
+  });
+}
+async function kvGet(k){ try{ return await idbDo('kv','readonly',st=>st.get(k)); }catch(e){ return _mem[k]; } }
+async function kvSet(k,v){ try{ await idbDo('kv','readwrite',st=>st.put(v,k)); }catch(e){ _mem[k]=v; } }
+async function audioPut(id,blob){ try{ await idbDo('audio','readwrite',st=>st.put(blob,id)); }catch(e){ _mem['a:'+id]=blob; } }
+async function audioGet(id){ try{ const b=await idbDo('audio','readonly',st=>st.get(id)); return b||_mem['a:'+id]; }catch(e){ return _mem['a:'+id]; } }
+async function audioDel(id){ try{ await idbDo('audio','readwrite',st=>st.delete(id)); }catch(e){} delete _mem['a:'+id]; }
+async function audioClear(){ try{ await idbDo('audio','readwrite',st=>st.clear()); }catch(e){} _mem={}; }
+
+let STATE={ startDate:null, completed:{}, logs:[], viewDay:1, recordings:[], weakSpots:[] };
+
+async function loadState(){
+  try{ const s=await kvGet(STATE_KEY); if(s&&typeof s==='object') STATE=Object.assign(STATE,s); }catch(e){}
+  if(!Array.isArray(STATE.recordings)) STATE.recordings=[];
+  if(!Array.isArray(STATE.weakSpots)) STATE.weakSpots=[];
+  if(!Array.isArray(STATE.logs)) STATE.logs=[];
+  if(!STATE.completed) STATE.completed={};
+  if(!STATE.startDate){ STATE.startDate=todayStr(); await saveState(); }
+}
+let saveTimer=null;
+async function saveState(){ try{ await kvSet(STATE_KEY,STATE); }catch(e){ console.error('save failed',e); } }
+function queueSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveState,400); }
+
+/* ---------------- spaced-repetition config ---------------- */
+const SR_INTERVALS=[1,3,7,14]; // days until next review after each practice
+const COMMON_SPOTS=["The R sound (general)","R after vowels","NURSE / ER vowel","TRAP vowel /ae/",
+  "LOT-THOUGHT vowel","Tense vs lax vowels","Flap T","Glottal T","Final / dropped T","Dark L",
+  "Schwa & vowel reduction","Word stress","Sentence rhythm","Intonation contours",
+  "Linking & connected speech","Diphthong glides","TH sounds","Yod-dropping","Casual reductions"];
+const BENCH_DAYS=[1,7,14,21,30,37,44,51,57,59];
+
+/* ---------------- date / derived helpers ---------------- */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function addDays(iso,n){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function daysSinceStart(){
+  const a=new Date(STATE.startDate+'T00:00:00'), b=new Date(todayStr()+'T00:00:00');
+  return Math.floor((b-a)/86400000);
+}
+function suggestedDay(){ return Math.min(60,Math.max(1,daysSinceStart()+1)); }
+function dayCompletion(d){
+  const arr=STATE.completed[d]||[]; const total=PLAN[d-1].ex.length;
+  const done=arr.filter(Boolean).length;
+  return {done,total,pct:total?Math.round(done/total*100):0,full:done===total&&total>0};
+}
+function fullyDoneCount(){ let n=0; for(let d=1;d<=60;d++){ if(dayCompletion(d).full) n++; } return n; }
+function totalMinutes(){ return STATE.logs.reduce((s,l)=>s+(+l.minutes||0),0); }
+function streak(){
+  const dates=new Set(STATE.logs.map(l=>l.date));
+  let s=0, cur=new Date(todayStr()+'T00:00:00');
+  if(!dates.has(todayStr())) cur.setDate(cur.getDate()-1);
+  while(dates.has(cur.toISOString().slice(0,10))){ s++; cur.setDate(cur.getDate()-1); }
+  return s;
+}
+function avgRatings(){
+  const rated=STATE.logs.filter(l=>l.ratings);
+  if(!rated.length) return null;
+  const o={}; SKILLS.forEach(s=>{
+    o[s.k]=Math.round(rated.reduce((a,l)=>a+(+l.ratings[s.k]||0),0)/rated.length*10)/10;
+  });
+  return o;
+}
+function spotDue(s){ return !s.mastered && s.dueDate<=todayStr(); }
+function dueSpots(){ return STATE.weakSpots.filter(spotDue); }
+function activeSpots(){ return STATE.weakSpots.filter(s=>!s.mastered); }
+function masteredSpots(){ return STATE.weakSpots.filter(s=>s.mastered); }
+
+function fmtDur(s){ s=Math.max(0,Math.round(s||0)); const m=Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); }
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function isBenchDay(d){ return BENCH_DAYS.indexOf(d)>=0; }
+function autoLabel(d){ return isBenchDay(d)?('Benchmark — Day '+d+(d===1?' baseline':'')):('Day '+d+' practice'); }
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ============================================================
+   RECORDER
+   ============================================================ */
+const Rec={mediaRecorder:null,chunks:[],stream:null,startTs:0,timer:null,active:false,
+  pendingBlob:null,pendingUrl:null,pendingDur:0,mime:''};
+
+function pickMime(){
+  if(!window.MediaRecorder) return '';
+  const opts=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+  for(const o of opts){ try{ if(MediaRecorder.isTypeSupported(o)) return o; }catch(e){} }
+  return '';
+}
+async function recStart(){
+  if(Rec.active) return;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    toast('Recording needs a modern browser served over HTTPS.'); return;
+  }
+  try{ Rec.stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){ toast('Microphone access was blocked.'); return; }
+  const mime=pickMime();
+  try{ Rec.mediaRecorder=mime?new MediaRecorder(Rec.stream,{mimeType:mime}):new MediaRecorder(Rec.stream); }
+  catch(e){ try{ Rec.mediaRecorder=new MediaRecorder(Rec.stream); }catch(e2){ toast('Recording not supported here.'); return; } }
+  Rec.chunks=[]; Rec.mime=Rec.mediaRecorder.mimeType||mime||'audio/webm';
+  Rec.mediaRecorder.ondataavailable=e=>{ if(e.data&&e.data.size) Rec.chunks.push(e.data); };
+  Rec.mediaRecorder.onstop=()=>{
+    const blob=new Blob(Rec.chunks,{type:Rec.mime});
+    Rec.pendingBlob=blob;
+    Rec.pendingDur=Math.round((Date.now()-Rec.startTs)/1000);
+    if(Rec.pendingUrl) URL.revokeObjectURL(Rec.pendingUrl);
+    Rec.pendingUrl=URL.createObjectURL(blob);
+    Rec.active=false; clearInterval(Rec.timer);
+    (Rec.stream?Rec.stream.getTracks():[]).forEach(t=>t.stop());
+    renderRecorder();
+  };
+  Rec.startTs=Date.now(); Rec.active=true;
+  try{ Rec.mediaRecorder.start(); }catch(e){ Rec.active=false; toast('Could not start recording.'); return; }
+  Rec.timer=setInterval(()=>{
+    const el=document.getElementById('recTimer');
+    if(el) el.textContent=fmtDur((Date.now()-Rec.startTs)/1000);
+  },250);
+  renderRecorder();
+}
+function recStop(){ if(Rec.mediaRecorder&&Rec.active){ try{ Rec.mediaRecorder.stop(); }catch(e){} } }
+function discardPending(){
+  if(Rec.pendingUrl) URL.revokeObjectURL(Rec.pendingUrl);
+  Rec.pendingBlob=null; Rec.pendingUrl=null; Rec.pendingDur=0;
+}
+async function saveRecording(){
+  if(!Rec.pendingBlob) return;
+  const d=STATE.viewDay||suggestedDay();
+  const labelEl=document.getElementById('recLabel');
+  const benchEl=document.getElementById('recBench');
+  const label=(labelEl&&labelEl.value.trim())||autoLabel(d);
+  const id='rec_'+Date.now();
+  await audioPut(id,Rec.pendingBlob);
+  STATE.recordings.push({id,day:d,date:todayStr(),label,
+    benchmark:!!(benchEl&&benchEl.checked),duration:Rec.pendingDur||0,
+    mime:Rec.mime,ts:Date.now()});
+  await saveState();
+  discardPending();
+  toast('Recording saved to your library.');
+  renderRecorder();
+}
+async function deleteRecording(id){
+  const r=STATE.recordings.find(x=>x.id===id);
+  if(!confirm('Delete this recording? "'+(r?r.label:'')+'"')) return;
+  await audioDel(id);
+  STATE.recordings=STATE.recordings.filter(x=>x.id!==id);
+  await saveState();
+  render();
+}
+async function playRec(id){
+  const row=document.querySelector('[data-rid="'+id+'"]');
+  if(!row) return;
+  let pl=row.querySelector('audio.inline-pl');
+  if(pl){ pl.play(); return; }
+  const blob=await audioGet(id);
+  if(!blob){ toast('Audio data not found for this entry.'); return; }
+  pl=document.createElement('audio');
+  pl.className='inline-pl'; pl.controls=true; pl.autoplay=true;
+  pl.src=URL.createObjectURL(blob);
+  row.appendChild(pl);
+}
+
+/* ============================================================
+   RENDER SHELL
+   ============================================================ */
+const app=document.getElementById('app');
+let CURRENT_VIEW='dash';
+
+function render(){
+  const v=CURRENT_VIEW;
+  if(v==='dash') app.innerHTML=viewDash();
+  else if(v==='today') app.innerHTML=viewToday();
+  else if(v==='plan') app.innerHTML=viewPlan();
+  else if(v==='drills') app.innerHTML=viewDrills();
+  else if(v==='recordings') app.innerHTML=viewRecordings();
+  else if(v==='tracker') app.innerHTML=viewTracker();
+  else if(v==='method') app.innerHTML=viewMethod();
+  bindView();
+  if(v==='today') renderRecorder();
+  if(v==='recordings') initCompare();
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function viewDash(){
+  const done=fullyDoneCount(), pct=Math.round(done/60*100);
+  const sug=suggestedDay();
+  const circ=2*Math.PI*82;
+  const ring=`<svg width="188" height="188" viewBox="0 0 188 188">
+    <circle cx="94" cy="94" r="82" fill="none" stroke="#2a241d" stroke-width="13"/>
+    <circle cx="94" cy="94" r="82" fill="none" stroke="url(#g1)" stroke-width="13"
+      stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-pct/100)}"
+      transform="rotate(-90 94 94)" style="transition:stroke-dashoffset .8s ease"/>
+    <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9a23b"/><stop offset="1" stop-color="#e0734a"/>
+    </linearGradient></defs></svg>`;
+  const av=avgRatings();
+
+  return `
+  <div class="view show">
+    <div class="dash-top">
+      <div class="card ring-card">
+        <div class="ring-wrap">${ring}
+          <div class="ring-center"><div class="big">${pct}<span style="font-size:22px">%</span></div>
+            <div class="lbl">Program Complete</div></div></div>
+        <div class="ring-sub"><b>${done}</b> of 60 days finished</div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat s-streak"><span class="glyph">🔥</span><div class="num">${streak()}</div>
+          <div class="cap">Day practice streak</div></div>
+        <div class="stat s-min"><span class="glyph">⏱</span><div class="num">${totalMinutes()}</div>
+          <div class="cap">Total minutes logged</div></div>
+        <div class="stat s-done"><span class="glyph">✓</span><div class="num">${done}</div>
+          <div class="cap">Days fully completed</div></div>
+        <div class="stat s-rec"><span class="glyph">🎙</span><div class="num">${STATE.recordings.length}</div>
+          <div class="cap">Voice recordings saved</div></div>
+      </div>
+    </div>
+
+    ${dashDrills()}
+
+    <div class="card radar-card">
+      <div class="section-label">Skill Profile · self-rated average</div>
+      ${drawRadar(av)}
+    </div>
+
+    <div class="card heat-card">
+      <div class="section-label">Consistency · last 9 weeks</div>
+      ${drawHeat()}
+    </div>
+
+    <div class="card" style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div><div class="section-label" style="margin-bottom:4px">Next up</div>
+        <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:600">Day ${sug}: ${PLAN[sug-1].title}</div>
+        <div style="color:var(--ink-soft);font-size:13.5px;margin-top:3px">${PHASES[PLAN[sug-1].p-1].name}</div></div>
+      <button class="btn primary" data-goday="${sug}">Go to today's session →</button>
+    </div>
+  </div>`;
+}
+
+function dashDrills(){
+  if(!STATE.weakSpots.length){
+    return `<div class="card" style="margin-top:16px">
+      <div class="section-label">Weak-spot drills</div>
+      <p style="color:var(--ink-soft);font-size:13.5px;line-height:1.6">No weak spots tracked yet. As you record yourself,
+      add the sounds you keep slipping on in the <b>Drills</b> tab. Each one resurfaces on a spaced schedule
+      (1 → 3 → 7 → 14 days) until it is mastered.</p>
+      <div style="margin-top:13px"><button class="btn ghost" data-gotab="drills">Open Drills →</button></div>
+    </div>`;
+  }
+  const due=dueSpots();
+  if(!due.length){
+    return `<div class="card" style="margin-top:16px">
+      <div class="section-label">Weak-spot drills</div>
+      <p style="color:var(--ink-soft);font-size:13.5px">Nothing due today.
+      <b>${activeSpots().length}</b> drill(s) scheduled · <b>${masteredSpots().length}</b> mastered.</p>
+    </div>`;
+  }
+  const items=due.map(s=>`
+    <div class="dash-drill">
+      <div><div class="dd-label">${escapeHtml(s.label)}</div>
+        <div class="dd-sub">Review ${Math.min(s.reps+1,SR_INTERVALS.length+1)} of ${SR_INTERVALS.length+1}</div></div>
+      <button class="btn primary mini" data-practiced="${s.id}">✓ Done</button>
+    </div>`).join('');
+  return `<div class="card" style="margin-top:16px">
+    <div class="section-label">Drills due today · ${due.length}</div>
+    ${items}
+    <div style="margin-top:12px"><button class="btn ghost" data-gotab="drills">Manage all drills →</button></div>
+  </div>`;
+}
+
+function drawRadar(av){
+  const cx=140,cy=140,R=104,n=SKILLS.length;
+  const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};
+  let rings='';
+  [0.25,0.5,0.75,1].forEach(f=>{
+    rings+=`<polygon points="${SKILLS.map((_,i)=>pt(i,R*f).join(',')).join(' ')}" fill="none" stroke="#3a3128" stroke-width="1"/>`;
+  });
+  let axes='',labels='';
+  SKILLS.forEach((s,i)=>{
+    const [x,y]=pt(i,R);
+    axes+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#3a3128" stroke-width="1"/>`;
+    const [lx,ly]=pt(i,R+22);
+    labels+=`<text x="${lx}" y="${ly}" fill="#8a7f6d" font-size="10.5" font-family="JetBrains Mono,monospace"
+      text-anchor="middle" dominant-baseline="middle">${s.label.split(' ')[0]}</text>`;
+  });
+  let shape='',dots='';
+  if(av){
+    const pts=SKILLS.map((s,i)=>pt(i,R*(av[s.k]/10)));
+    shape=`<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="rgba(233,162,59,.22)" stroke="#e9a23b" stroke-width="2"/>`;
+    dots=pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${SKILLS[i].color}"/>`).join('');
+  }
+  const legend=SKILLS.map(s=>{
+    const v=av?av[s.k]:0;
+    return `<div class="row"><span class="dot" style="background:${s.color}"></span>
+      <span style="flex:1">${s.label}</span>
+      <span class="bar-track" style="max-width:90px"><span class="bar-fill" style="width:${v*10}%;background:${s.color}"></span></span>
+      <span class="val">${av?v.toFixed(1):'—'}</span></div>`;
+  }).join('');
+  return `<div class="radar-flex">
+    <svg width="280" height="280" viewBox="0 0 280 280">${rings}${axes}${shape}${dots}${labels}</svg>
+    <div class="legend">${legend}
+      ${!av?'<div style="color:var(--ink-faint);font-style:italic;font-size:13px;margin-top:8px">Log your first practice session to build your skill profile.</div>':''}
+    </div></div>`;
+}
+function drawHeat(){
+  const mins={}; STATE.logs.forEach(l=>{ mins[l.date]=(mins[l.date]||0)+(+l.minutes||0); });
+  let cells=''; const today=todayStr();
+  for(let i=62;i>=0;i--){
+    const d=new Date(today+'T00:00:00'); d.setDate(d.getDate()-i);
+    const ds=d.toISOString().slice(0,10); const m=mins[ds]||0;
+    let cls='cell';
+    if(m>0&&m<20)cls+=' l1'; else if(m>=20&&m<40)cls+=' l2'; else if(m>=40)cls+=' l3';
+    if(ds===today)cls+=' today';
+    cells+=`<div class="${cls}" title="${ds}: ${m} min"></div>`;
+  }
+  return `<div class="heat">${cells}</div>
+    <div class="heat-key"><span>Less</span><span class="cell"></span><span class="cell l1"></span>
+      <span class="cell l2"></span><span class="cell l3"></span><span>More</span></div>`;
+}
+
+/* ---------------- TODAY ---------------- */
+function viewToday(){
+  const d=STATE.viewDay||suggestedDay();
+  const day=PLAN[d-1], ph=PHASES[day.p-1];
+  const comp=dayCompletion(d);
+  const checks=STATE.completed[d]||[];
+  const exHtml=day.ex.map((e,i)=>`
+    <div class="ex ${checks[i]?'done':''}">
+      <div class="check" data-check="${i}">✓</div>
+      <div class="body">
+        <div class="etitle">${e.t}<span class="emin">${e.min} min</span></div>
+        <div class="edesc">${e.d}</div>
+      </div>
+    </div>`).join('');
+  const totalMin=day.ex.reduce((s,e)=>s+e.min,0);
+  return `
+  <div class="view show">
+    <div class="card">
+      <div class="day-head">
+        <span class="phase-pill">Phase ${day.p} · ${ph.name}</span>
+        <div class="day-nav">
+          <button class="navbtn" data-step="-1" ${d<=1?'disabled':''}>‹</button>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink-soft);padding:0 4px">Day ${d} / 60</span>
+          <button class="navbtn" data-step="1" ${d>=60?'disabled':''}>›</button>
+        </div>
+      </div>
+      <div class="day-title">${day.title}</div>
+      <div class="day-why">&ldquo;${day.why}&rdquo;</div>
+      <div class="day-meta">
+        <span><b>Session length</b> ~${totalMin} min</span>
+        <span><b>Exercises</b> ${day.ex.length}</span>
+        <span><b>Status</b> ${comp.full?'Complete':comp.done?'In progress':'Not started'}</span>
+      </div>
+      <div style="margin-top:8px">${exHtml}</div>
+      <div class="listen"><b>Daily Listening</b><br>${day.listen}</div>
+      <div class="day-progress">
+        <span class="dp-label">${comp.done}/${comp.total}</span>
+        <div class="dp-track"><div class="dp-fill" style="width:${comp.pct}%"></div></div>
+        <span class="dp-label">${comp.pct}%</span>
+      </div>
+      ${comp.full?'<div style="margin-top:16px"><button class="btn ghost" data-step="1" '+(d>=60?'disabled':'')+'>Next day →</button></div>':''}
+    </div>
+
+    <div class="card" id="recorderCard" style="margin-top:16px"></div>
+  </div>`;
+}
+
+function renderRecorder(){
+  const host=document.getElementById('recorderCard');
+  if(!host) return;
+  const d=STATE.viewDay||suggestedDay();
+  const dayRecs=STATE.recordings.filter(r=>r.day===d).sort((a,b)=>b.ts-a.ts);
+  let inner='<div class="section-label">Studio Recorder · Day '+d+'</div>';
+  if(Rec.active){
+    inner+=`<div class="rec-stage recording">
+      <div class="rec-pulse"></div>
+      <div class="rec-timer" id="recTimer">0:00</div>
+      <button class="btn rec-stop" id="recStopBtn">■ Stop recording</button>
+    </div>`;
+  } else if(Rec.pendingBlob){
+    inner+=`<div class="rec-stage review">
+      <div class="rec-review-label">Recording ready · ${fmtDur(Rec.pendingDur)}</div>
+      <audio controls src="${Rec.pendingUrl}" style="width:100%;margin:10px 0;height:40px"></audio>
+      <input type="text" id="recLabel" placeholder="Label this take" value="${escapeHtml(autoLabel(d))}">
+      <label class="rec-bench"><input type="checkbox" id="recBench" ${isBenchDay(d)?'checked':''}>
+        Mark as a benchmark recording (for progress comparison)</label>
+      <div class="rec-actions">
+        <button class="btn ghost" id="recDiscardBtn">Discard</button>
+        <button class="btn primary" id="recSaveBtn">Save to library</button>
+      </div>
+    </div>`;
+  } else {
+    inner+=`<div class="rec-stage idle">
+      <button class="btn rec-start" id="recStartBtn"><span class="rec-dot"></span> Start recording</button>
+      <div class="rec-hint">Record yourself reading or speaking. Save it, then tap <b>AI feedback</b> on the take below to get a coached assessment with scores and drills.</div>
+    </div>`;
+  }
+  if(dayRecs.length){
+    inner+='<div class="rec-list">'+dayRecs.map(r=>recItemHtml(r,false)).join('')+'</div>';
+  }
+  host.innerHTML=inner;
+  const sb=document.getElementById('recStartBtn'); if(sb) sb.onclick=recStart;
+  const tb=document.getElementById('recStopBtn'); if(tb) tb.onclick=recStop;
+  const vb=document.getElementById('recSaveBtn'); if(vb) vb.onclick=saveRecording;
+  const db=document.getElementById('recDiscardBtn'); if(db) db.onclick=()=>{discardPending();renderRecorder();};
+  bindRecItems(host);
+}
+function recItemHtml(r,showDay){
+  const fbBadge=r.feedback?`<span class="rec-badge" style="background:rgba(143,174,110,.16);color:var(--sage);border-color:rgba(143,174,110,.3)">AI ${r.feedback.overall}/10</span>`:'';
+  return `<div class="rec-item" data-rid="${r.id}">
+    <div class="rec-play" data-playrec="${r.id}">▶</div>
+    <div class="rec-meta">
+      <div class="rec-name">${escapeHtml(r.label)} ${r.benchmark?'<span class="rec-badge">benchmark</span>':''}${fbBadge}</div>
+      <div class="rec-sub">${showDay?'Day '+r.day+' · ':''}${r.date} · ${fmtDur(r.duration)}</div>
+    </div>
+    <button class="btn ghost mini" data-fbrec="${r.id}" style="flex:none">${r.feedback?'View feedback':'✨ AI feedback'}</button>
+    <button class="rec-del" data-delrec="${r.id}">✕</button>
+  </div>`;
+}
+function bindRecItems(scope){
+  scope.querySelectorAll('[data-playrec]').forEach(el=>el.onclick=()=>playRec(el.dataset.playrec));
+  scope.querySelectorAll('[data-delrec]').forEach(el=>el.onclick=()=>deleteRecording(el.dataset.delrec));
+  scope.querySelectorAll('[data-fbrec]').forEach(el=>el.onclick=()=>aiFeedback(el.dataset.fbrec));
+}
+
+/* ============================================================
+   AI FEEDBACK (Gemini via /api/feedback serverless function)
+   ============================================================ */
+const AI={ endpoint:'/api/feedback', maxSeconds:150 };
+/* Public-domain reference text used on benchmark days so the model can compare. */
+const RAINBOW="When the sunlight strikes raindrops in the air, they act as a prism and form a rainbow. The rainbow is a division of white light into many beautiful colors. These take the shape of a long round arch, with its path high above, and its two ends apparently beyond the horizon.";
+
+function abToB64(buf){
+  let bin=''; const bytes=new Uint8Array(buf); const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){ bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+chunk)); }
+  return btoa(bin);
+}
+function encodeWav(samples,rate){
+  const buf=new ArrayBuffer(44+samples.length*2), view=new DataView(buf);
+  const w=(o,s)=>{for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i));};
+  w(0,'RIFF'); view.setUint32(4,36+samples.length*2,true); w(8,'WAVE');
+  w(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true);
+  view.setUint32(24,rate,true); view.setUint32(28,rate*2,true); view.setUint16(32,2,true); view.setUint16(34,16,true);
+  w(36,'data'); view.setUint32(40,samples.length*2,true);
+  let o=44; for(let i=0;i<samples.length;i++){ let s=Math.max(-1,Math.min(1,samples[i])); view.setInt16(o,s<0?s*0x8000:s*0x7FFF,true); o+=2; }
+  return buf;
+}
+async function blobToWavB64(blob,targetRate){
+  targetRate=targetRate||16000;
+  const arr=await blob.arrayBuffer();
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC) throw new Error('no-audio-context');
+  const ctx=new AC();
+  let decoded;
+  try{ decoded=await ctx.decodeAudioData(arr.slice(0)); }
+  catch(e){ ctx.close&&ctx.close(); throw new Error('decode-failed'); }
+  const len=decoded.length, chans=decoded.numberOfChannels;
+  const mono=new Float32Array(len);
+  for(let c=0;c<chans;c++){ const d=decoded.getChannelData(c); for(let i=0;i<len;i++) mono[i]+=d[i]/chans; }
+  const ratio=decoded.sampleRate/targetRate;
+  let outLen=Math.floor(len/ratio);
+  const maxSamples=AI.maxSeconds*targetRate;
+  if(outLen>maxSamples) outLen=maxSamples; // cap length to stay under request limits
+  const out=new Float32Array(outLen);
+  for(let i=0;i<outLen;i++) out[i]=mono[Math.floor(i*ratio)]||0;
+  ctx.close&&ctx.close();
+  return abToB64(encodeWav(out,targetRate));
+}
+
+async function aiFeedback(recId){
+  const rec=STATE.recordings.find(r=>r.id===recId);
+  if(!rec) return;
+  if(rec.feedback){ showFeedbackModal(rec); return; }
+  showFeedbackLoading();
+  let blob;
+  try{ blob=await audioGet(recId); }catch(e){}
+  if(!blob){ showFeedbackError('The audio for this recording could not be found.'); return; }
+  let wavB64;
+  try{ wavB64=await blobToWavB64(blob); }
+  catch(e){ showFeedbackError('This recording could not be processed in your browser. Try a recording made in this same browser.'); return; }
+  const day=PLAN[rec.day-1];
+  const payload={
+    audioBase64:wavB64, mimeType:'audio/wav',
+    day:rec.day, title:day?day.title:('Day '+rec.day),
+    referenceText: rec.benchmark?RAINBOW:'',
+    focus: day?day.title:'', 
+    weakSpots: activeSpots().map(s=>s.label).slice(0,6)
+  };
+  let res,data;
+  try{ res=await fetch(AI.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); }
+  catch(e){ showFeedbackError('Could not reach the feedback service. If you are viewing this as a local file, deploy to Vercel first — the AI function only runs when hosted.'); return; }
+  if(!res.ok){
+    let msg='The feedback service returned an error ('+res.status+').';
+    try{ const j=await res.json(); if(j&&j.error) msg=j.error; }catch(e){}
+    if(res.status===404) msg='Feedback function not found. Make sure the /api/feedback file is deployed and you have set the GEMINI_API_KEY environment variable in Vercel.';
+    showFeedbackError(msg); return;
+  }
+  try{ data=await res.json(); }
+  catch(e){ showFeedbackError('The feedback service sent a response that could not be read.'); return; }
+  if(!data||!data.scores){ showFeedbackError('The model did not return a usable assessment. Try again.'); return; }
+  rec.feedback={...data, at:todayStr(), ts:Date.now()};
+  await saveState();
+  showFeedbackModal(rec);
+  render();
+}
+
+function showFeedbackLoading(){
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`<h3>Analyzing your speech…</h3>
+    <p>Converting audio and sending it to your AI coach. This usually takes 5 to 20 seconds.</p>
+    <div style="display:flex;justify-content:center;padding:18px 0"><div class="rec-pulse"></div></div>`;
+  document.getElementById('modalBg').classList.add('show');
+}
+function showFeedbackError(msg){
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`<h3>Feedback unavailable</h3><p>${escapeHtml(msg)}</p>
+    <div class="modal-actions"><button class="btn primary" id="fbErrClose">Close</button></div>`;
+  document.getElementById('modalBg').classList.add('show');
+  document.getElementById('fbErrClose').onclick=closeModal;
+}
+function showFeedbackModal(rec){
+  const f=rec.feedback;
+  const box=document.getElementById('modalBox');
+  const scoreBars=SKILLS.map(s=>{
+    const v=(f.scores&&typeof f.scores[s.k]==='number')?f.scores[s.k]:null;
+    return `<div class="legend"><div class="row">
+      <span class="dot" style="background:${s.color}"></span>
+      <span style="flex:1">${s.label}</span>
+      <span class="bar-track" style="max-width:120px"><span class="bar-fill" style="width:${v!=null?v*10:0}%;background:${s.color}"></span></span>
+      <span class="val">${v!=null?v:'—'}</span></div></div>`;
+  }).join('');
+  const strengths=(f.strengths||[]).map(s=>`<li>${escapeHtml(s)}</li>`).join('');
+  const fixes=(f.fixes||[]).map((x,i)=>`
+    <div style="background:var(--panel-2);border:1px solid var(--line-solid);border-radius:11px;padding:12px 13px;margin-bottom:9px">
+      <div style="font-weight:700;font-size:14px">${escapeHtml(x.issue||('Fix '+(i+1)))}</div>
+      <div style="color:var(--ink-soft);font-size:13px;margin-top:5px;line-height:1.5">${escapeHtml(x.detail||'')}</div>
+    </div>`).join('');
+  const drillBtns=(f.drills||[]).map(d=>`<button class="btn ghost mini" data-adddrill="${escapeHtml(d)}">+ ${escapeHtml(d)}</button>`).join(' ');
+  box.innerHTML=`
+    <h3>AI Coach · ${f.overall!=null?f.overall+'/10 overall':'feedback'}</h3>
+    <p>${escapeHtml(f.summary||'')}</p>
+    <div class="section-label" style="margin:6px 0 10px">Scores</div>
+    ${scoreBars}
+    ${strengths?`<div class="section-label" style="margin:18px 0 8px">What's working</div><ul class="res" style="margin:0;padding-left:20px">${strengths}</ul>`:''}
+    ${fixes?`<div class="section-label" style="margin:18px 0 10px">Priority fixes</div>${fixes}`:''}
+    ${drillBtns?`<div class="section-label" style="margin:16px 0 9px">Add to your spaced-repetition drills</div><div style="display:flex;gap:7px;flex-wrap:wrap">${drillBtns}</div>`:''}
+    <div class="modal-actions">
+      <button class="btn ghost" id="fbLog">Save scores to tracker</button>
+      <button class="btn primary" id="fbClose">Done</button>
+    </div>`;
+  document.getElementById('modalBg').classList.add('show');
+  document.getElementById('fbClose').onclick=closeModal;
+  document.getElementById('fbLog').onclick=()=>{
+    STATE.logs.push({id:Date.now(),ts:Date.now(),date:todayStr(),day:rec.day,
+      minutes:Math.max(1,Math.round((rec.duration||0)/60)),ratings:f.scores,
+      notes:'AI assessment: '+(f.summary||'').slice(0,140)});
+    saveState(); closeModal(); switchTab('dash'); toast('AI scores saved to your tracker.');
+  };
+  box.querySelectorAll('[data-adddrill]').forEach(el=>el.onclick=()=>{
+    const label=el.dataset.adddrill;
+    if(STATE.weakSpots.some(w=>w.label===label&&!w.mastered)){ toast('Already in your drills.'); return; }
+    STATE.weakSpots.push({id:'ws_'+Date.now()+Math.random().toString(36).slice(2,5),label,
+      note:'Flagged by AI coach on day '+rec.day,reps:0,created:todayStr(),dueDate:todayStr(),history:[],mastered:false});
+    saveState(); el.disabled=true; el.textContent='✓ added'; toast('Added "'+label+'" to drills.');
+  });
+}
+
+/* ---------------- RECORDINGS LIBRARY ---------------- */
+function viewRecordings(){
+  const recs=[...STATE.recordings].sort((a,b)=>a.ts-b.ts);
+  if(!recs.length){
+    return `<div class="view show"><div class="card">
+      <div class="section-label">Recordings library</div>
+      <div class="empty">No recordings yet.<br>Open the <b>Today</b> tab and use the Studio Recorder to capture your first take.</div>
+    </div></div>`;
+  }
+  const opts=recs.map(r=>`<option value="${r.id}">Day ${r.day} — ${escapeHtml(r.label)} (${r.date})</option>`).join('');
+  const byDay={}; recs.forEach(r=>{ (byDay[r.day]=byDay[r.day]||[]).push(r); });
+  const days=Object.keys(byDay).map(Number).sort((a,b)=>b-a);
+  let lib='';
+  days.forEach(d=>{
+    lib+=`<div class="rec-daygroup"><div class="rec-dayhead">Day ${d} · ${escapeHtml(PLAN[d-1].title)}</div>`;
+    byDay[d].sort((a,b)=>b.ts-a.ts).forEach(r=>lib+=recItemHtml(r,false));
+    lib+='</div>';
+  });
+  return `<div class="view show">
+    <div class="card">
+      <div class="section-label">Benchmark comparison · hear your progress</div>
+      <p class="cmp-hint">Pick two recordings — for example your Day 1 baseline and a later benchmark — and play them back to back. The difference is your proof of progress.</p>
+      <div class="cmp">
+        <div class="cmp-slot">
+          <label class="fld">Recording A</label>
+          <select id="cmpSelA">${opts}</select>
+          <audio id="cmpAudioA" controls style="width:100%;margin-top:9px;height:40px"></audio>
+        </div>
+        <div class="cmp-slot">
+          <label class="fld">Recording B</label>
+          <select id="cmpSelB">${opts}</select>
+          <audio id="cmpAudioB" controls style="width:100%;margin-top:9px;height:40px"></audio>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="section-label">Library · ${recs.length} recordings</div>
+      ${lib}
+    </div>
+  </div>`;
+}
+async function loadCompare(slot,id){
+  const a=document.getElementById('cmpAudio'+slot);
+  if(!a) return;
+  if(a.dataset.url){ URL.revokeObjectURL(a.dataset.url); a.dataset.url=''; }
+  if(!id){ a.removeAttribute('src'); return; }
+  const blob=await audioGet(id);
+  if(!blob) return;
+  const url=URL.createObjectURL(blob); a.dataset.url=url; a.src=url;
+}
+function initCompare(){
+  const recs=[...STATE.recordings].sort((a,b)=>a.ts-b.ts);
+  if(!recs.length) return;
+  const selA=document.getElementById('cmpSelA'), selB=document.getElementById('cmpSelB');
+  if(!selA||!selB) return;
+  selA.value=recs[0].id;
+  selB.value=recs[recs.length-1].id;
+  loadCompare('A',selA.value); loadCompare('B',selB.value);
+  selA.onchange=()=>loadCompare('A',selA.value);
+  selB.onchange=()=>loadCompare('B',selB.value);
+}
+
+/* ---------------- DRILLS (spaced repetition) ---------------- */
+function viewDrills(){
+  const due=dueSpots().sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  const upcoming=activeSpots().filter(s=>!spotDue(s)).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  const mastered=masteredSpots();
+  const optTxt=COMMON_SPOTS.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+
+  return `<div class="view show">
+    <div class="card">
+      <div class="section-label">Add a weak spot</div>
+      <p style="color:var(--ink-soft);font-size:13.5px;margin-bottom:14px;line-height:1.6">
+        Found a sound you keep slipping on? Add it here. It becomes a drill that resurfaces on a spaced schedule
+        — <b>today, then +1, +3, +7 and +14 days</b> — and retires as <b>mastered</b> once you clear the cycle.</p>
+      <div class="add-spot">
+        <div><label class="fld">Pick a common weak spot</label>
+          <select id="spotSel"><option value="">— choose —</option>${optTxt}</select></div>
+        <div><label class="fld">…or type your own</label>
+          <input type="text" id="spotCustom" placeholder="e.g. R in 'world' and 'girl'"></div>
+      </div>
+      <div style="margin-top:14px"><label class="fld">Note (optional) — context or a drill reminder</label>
+        <textarea id="spotNote" placeholder="e.g. tongue tip keeps touching; bunch the back instead."></textarea></div>
+      <div style="margin-top:14px"><button class="btn primary" id="addSpotBtn">Add to drill queue</button></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="section-label">Due today · ${due.length}</div>
+      ${due.length?due.map(s=>drillCardHtml(s)).join(''):'<div class="empty">Nothing due. Good — come back tomorrow, or add a new weak spot above.</div>'}
+    </div>
+
+    ${upcoming.length?`<div class="card" style="margin-top:16px">
+      <div class="section-label">Scheduled · ${upcoming.length}</div>
+      ${upcoming.map(s=>drillCardHtml(s)).join('')}
+    </div>`:''}
+
+    ${mastered.length?`<div class="card" style="margin-top:16px">
+      <div class="section-label">Mastered · ${mastered.length}</div>
+      ${mastered.map(s=>drillCardHtml(s)).join('')}
+    </div>`:''}
+  </div>`;
+}
+function drillCardHtml(s){
+  const total=SR_INTERVALS.length+1;
+  let dots='';
+  const filled=s.mastered?total:s.reps;
+  for(let i=0;i<total;i++) dots+=`<span class="sr-dot ${i<filled?'on':''}"></span>`;
+  const cls='drill-card '+(s.mastered?'mastered':(spotDue(s)?'due':''));
+  let actions='';
+  if(s.mastered){
+    actions=`<button class="btn ghost mini" data-delspot="${s.id}">Remove</button>`;
+  } else if(spotDue(s)){
+    actions=`<button class="btn primary mini" data-practiced="${s.id}">✓ Practiced</button>
+      <button class="btn ghost mini" data-snooze="${s.id}">Snooze 1d</button>
+      <button class="btn ghost mini" data-delspot="${s.id}">Remove</button>`;
+  } else {
+    actions=`<button class="btn ghost mini" data-practiced="${s.id}">Practice now</button>
+      <button class="btn ghost mini" data-delspot="${s.id}">Remove</button>`;
+  }
+  const dueTxt=s.mastered?'Mastered':(spotDue(s)?'Due today':'Next review: '+s.dueDate);
+  return `<div class="${cls}" data-spot="${s.id}">
+    <div class="drill-top">
+      <div class="drill-label">${escapeHtml(s.label)}</div>
+      <div class="sr-dots" title="${filled} of ${total}">${dots}</div>
+    </div>
+    ${s.note?`<div class="drill-note">${escapeHtml(s.note)}</div>`:''}
+    <div class="drill-foot">
+      <span class="drill-due">${dueTxt}</span>
+      <div class="drill-actions">${actions}</div>
+    </div>
+  </div>`;
+}
+function addSpot(){
+  const sel=(document.getElementById('spotSel')||{}).value||'';
+  const custom=((document.getElementById('spotCustom')||{}).value||'').trim();
+  const note=((document.getElementById('spotNote')||{}).value||'').trim();
+  const label=custom||sel;
+  if(!label){ toast('Choose a common weak spot or type your own.'); return; }
+  STATE.weakSpots.push({id:'ws_'+Date.now(),label,note,reps:0,
+    created:todayStr(),dueDate:todayStr(),history:[],mastered:false});
+  saveState(); render();
+  toast('Added — "'+label+'" is due today.');
+}
+function practiceSpot(id){
+  const s=STATE.weakSpots.find(w=>w.id===id); if(!s||s.mastered) return;
+  s.history=s.history||[]; s.history.push(todayStr());
+  if(s.reps<SR_INTERVALS.length){
+    s.dueDate=addDays(todayStr(),SR_INTERVALS[s.reps]);
+    s.reps++;
+  }
+  if(s.reps>=SR_INTERVALS.length){ s.mastered=true; }
+  saveState(); render();
+  toast(s.mastered?'"'+s.label+'" mastered — nicely done.':'Logged. Next review '+s.dueDate+'.');
+}
+function snoozeSpot(id){
+  const s=STATE.weakSpots.find(w=>w.id===id); if(!s) return;
+  s.dueDate=addDays(todayStr(),1); saveState(); render();
+  toast('Snoozed to tomorrow.');
+}
+function removeSpot(id){
+  const s=STATE.weakSpots.find(w=>w.id===id);
+  if(!confirm('Remove the drill "'+(s?s.label:'')+'"?')) return;
+  STATE.weakSpots=STATE.weakSpots.filter(w=>w.id!==id);
+  saveState(); render();
+}
+
+/* ---------------- PLAN ---------------- */
+function viewPlan(){
+  const sug=suggestedDay();
+  let html='<div class="view show">';
+  PHASES.forEach(ph=>{
+    const [a,b]=ph.range; let pdone=0;
+    for(let d=a;d<=b;d++) if(dayCompletion(d).full) pdone++;
+    const ptot=b-a+1, ppct=Math.round(pdone/ptot*100);
+    html+=`<div class="phase-block">
+      <div class="phase-bar">
+        <div><div class="pn">Phase ${ph.id} · ${ph.name}</div>
+          <div style="color:var(--ink-soft);font-size:12.5px;margin-top:2px">${ph.blurb}</div></div>
+        <div style="text-align:right">
+          <div class="pdays">Days ${a}–${b}</div>
+          <div class="ptrack" style="margin-top:6px"><div class="pfill" style="width:${ppct}%"></div></div>
+        </div>
+      </div>
+      <div class="daylist">`;
+    for(let d=a;d<=b;d++){
+      const c=dayCompletion(d);
+      let cls='todo',label='To do';
+      if(c.full){cls='done';label='Done';}
+      else if(c.done){cls='partial';label=c.done+'/'+c.total;}
+      if(d===sug&&!c.full)cls+=' current';
+      html+=`<div class="dayrow ${cls}" data-goday="${d}">
+        <span class="dnum">DAY ${d}</span>
+        <span class="dttl">${PLAN[d-1].title}</span>
+        <span class="dstate">${d===sug&&!c.full?'Today':label}</span>
+      </div>`;
+    }
+    html+='</div></div>';
+  });
+  return html+'</div>';
+}
+
+/* ---------------- TRACKER ---------------- */
+function viewTracker(){
+  const logs=[...STATE.logs].sort((a,b)=>(b.ts||0)-(a.ts||0));
+  const logHtml=logs.length?logs.map(l=>{
+    const avg=l.ratings?(SKILLS.reduce((s,k)=>s+(+l.ratings[k.k]||0),0)/SKILLS.length).toFixed(1):'—';
+    return `<div class="logitem">
+      <div class="ld">${l.date}</div>
+      <div class="lmain"><div class="lday">Day ${l.day} · ${l.minutes} min</div>
+        ${l.notes?`<div class="lnotes">${escapeHtml(l.notes)}</div>`:''}</div>
+      <div class="lscore">${avg}/10</div>
+    </div>`;
+  }).join(''):'<div class="empty">No sessions logged yet. Complete a practice session and log it to start tracking.</div>';
+
+  return `<div class="view show">
+    <div class="grid" style="grid-template-columns:1fr;gap:16px">
+      <div class="card">
+        <div class="section-label">Log a practice session</div>
+        <div class="form-grid" style="margin-bottom:6px">
+          <div><label class="fld">Which day did you practice?</label>
+            <select id="logDay">${PLAN.map((p,i)=>`<option value="${i+1}" ${i+1===suggestedDay()?'selected':''}>Day ${i+1} — ${escapeHtml(p.title)}</option>`).join('')}</select></div>
+          <div><label class="fld">Minutes practiced</label>
+            <input type="number" id="logMin" min="1" max="240" value="30"></div>
+        </div>
+        <div class="section-label" style="margin:18px 0 12px">Rate yourself · 1 to 10</div>
+        <div id="sliders">
+          ${SKILLS.map(s=>`<div class="slider-row">
+            <div class="sl-head"><span>${s.label}</span><span class="sv" id="sv-${s.k}">5</span></div>
+            <input type="range" min="1" max="10" value="5" data-sk="${s.k}"></div>`).join('')}
+        </div>
+        <label class="fld" style="margin-top:6px">Notes — what improved, what to fix tomorrow</label>
+        <textarea id="logNotes" placeholder="e.g. R after vowels is cleaner; flap T still slips when I speak fast."></textarea>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn primary" id="saveLog">Save session</button>
+          <button class="btn ghost" data-gotab="drills">Flag a weak spot →</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">Session history · ${logs.length} entries</div>
+        ${logHtml}
+      </div>
+    </div>
+  </div>`;
+}
+function saveLogSession(){
+  const day=+document.getElementById('logDay').value;
+  const minutes=+document.getElementById('logMin').value||0;
+  const notes=document.getElementById('logNotes').value.trim();
+  const ratings={};
+  app.querySelectorAll('input[type=range][data-sk]').forEach(sl=>ratings[sl.dataset.sk]=+sl.value);
+  if(minutes<=0){ toast('Enter how many minutes you practiced.'); return; }
+  STATE.logs.push({id:Date.now(),ts:Date.now(),date:todayStr(),day,minutes,ratings,notes});
+  saveState();
+  toast('Session saved — skill profile updated.');
+  switchTab('dash');
+}
+
+/* ---------------- METHOD ---------------- */
+function viewMethod(){
+  return `<div class="view show"><div class="card res">
+    <h3>How this program works</h3>
+    <p>Sixty days, five phases. You rebuild the American accent from the ground up — sounds first, then rhythm,
+    then real conversation. Each day is one focused session of roughly 25 to 35 minutes. Consistency beats
+    intensity: a daily 30 minutes outperforms an occasional three-hour push.</p>
+
+    <h3>The daily loop</h3>
+    <ul>
+      <li><span class="tag">1 · Warm up</span> — loosen the articulators and re-find key positions.</li>
+      <li><span class="tag">2 · Target drill</span> — isolate and over-practice the day's specific feature.</li>
+      <li><span class="tag">3 · Shadow</span> — speak in sync with a native model, copying melody and timing.</li>
+      <li><span class="tag">4 · Record &amp; review</span> — use the in-app recorder, then compare and note one fix.</li>
+    </ul>
+
+    <h3>The Studio Recorder &amp; library</h3>
+    <p>Every day has a built-in recorder. Recordings are tagged to that day and saved to your <b>Recordings</b>
+    library, stored privately in your own browser. Mark the weekly reads as <b>benchmarks</b>, then use the
+    comparison tool to play, say, Day 1 against Day 30 back to back. That contrast is the most motivating
+    feedback you will get.</p>
+
+    <h3>Spaced-repetition drills</h3>
+    <p>When a recording reveals a sound you keep missing, add it as a <b>weak spot</b> in the Drills tab. It
+    resurfaces on a spaced schedule — today, then +1, +3, +7 and +14 days — and retires as <b>mastered</b> once
+    you clear the cycle. Spacing the practice is what moves a correction from "I can do it when I concentrate"
+    to automatic.</p>
+
+    <h3>What "American accent" means here</h3>
+    <p>The target is General American. Priority features:</p>
+    <ul>
+      <li><b>Rhoticity</b> — pronouncing every R (<span class="ipa">car, hard, mother</span>).</li>
+      <li><b>The flap T</b> — medial T becoming a quick D (<span class="ipa">water -> "wadder"</span>).</li>
+      <li><b>Vowel reduction</b> — unstressed vowels collapsing to the schwa. The root of American rhythm.</li>
+      <li><b>Stress-timing</b> — stressed syllables on a regular beat, everything between compressed.</li>
+      <li><b>Intonation</b> — the pitch contours that carry attitude and meaning.</li>
+    </ul>
+
+    <h3>An honest note on the timeline</h3>
+    <p>In 30 focused days you can expect a clearly more American accent. By Day 60 your spontaneous speech
+    catches up to your read-aloud quality. "Indistinguishable from a native" is a longer road for most adult
+    learners, and that is normal. Aim for <i>clear, confident, natural and easy to understand</i> — an
+    achievable, genuinely valuable outcome the maintenance plan keeps in place.</p>
+
+    <h3>Your data &amp; privacy</h3>
+    <p>Everything — progress, ratings and audio — is stored only in this browser on this device. Nothing is
+    uploaded. Clearing your browser data will erase it, so use <b>Settings → Export backup</b> periodically.
+    Note that audio recordings are not included in the text backup.</p>
+  </div></div>`;
+}
+
+/* ============================================================
+   BINDINGS
+   ============================================================ */
+function bindView(){
+  app.querySelectorAll('[data-goday]').forEach(el=>el.addEventListener('click',()=>{
+    STATE.viewDay=+el.dataset.goday; queueSave(); switchTab('today');
+  }));
+  app.querySelectorAll('[data-gotab]').forEach(el=>el.addEventListener('click',()=>switchTab(el.dataset.gotab)));
+  app.querySelectorAll('[data-step]').forEach(el=>el.addEventListener('click',()=>{
+    const nd=(STATE.viewDay||suggestedDay())+(+el.dataset.step);
+    if(nd>=1&&nd<=60){ STATE.viewDay=nd; queueSave(); render(); }
+  }));
+  app.querySelectorAll('[data-check]').forEach(el=>el.addEventListener('click',()=>{
+    const d=STATE.viewDay||suggestedDay(), i=+el.dataset.check;
+    if(!STATE.completed[d]) STATE.completed[d]=new Array(PLAN[d-1].ex.length).fill(false);
+    STATE.completed[d][i]=!STATE.completed[d][i];
+    queueSave(); render();
+    if(dayCompletion(d).full) toast('Day '+d+' complete — nice work.');
+  }));
+  app.querySelectorAll('input[type=range][data-sk]').forEach(sl=>sl.addEventListener('input',()=>{
+    const o=document.getElementById('sv-'+sl.dataset.sk); if(o) o.textContent=sl.value;
+  }));
+  const sb=document.getElementById('saveLog'); if(sb) sb.addEventListener('click',saveLogSession);
+  const asb=document.getElementById('addSpotBtn'); if(asb) asb.addEventListener('click',addSpot);
+  app.querySelectorAll('[data-practiced]').forEach(el=>el.addEventListener('click',()=>practiceSpot(el.dataset.practiced)));
+  app.querySelectorAll('[data-snooze]').forEach(el=>el.addEventListener('click',()=>snoozeSpot(el.dataset.snooze)));
+  app.querySelectorAll('[data-delspot]').forEach(el=>el.addEventListener('click',()=>removeSpot(el.dataset.delspot)));
+  bindRecItems(app);
+}
+
+function switchTab(v){
+  CURRENT_VIEW=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(t) switchTab(t.dataset.v);
+});
+
+/* ---------------- SETTINGS ---------------- */
+document.getElementById('setupBtn').addEventListener('click',openSettings);
+function openSettings(){
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`
+    <h3>Settings</h3>
+    <p>Program started <b>${STATE.startDate}</b> · today is suggested Day ${suggestedDay()} ·
+    ${STATE.recordings.length} recordings · ${STATE.weakSpots.length} drills.</p>
+
+    <label class="fld">Backup &amp; restore</label>
+    <p style="margin:6px 0 0">Export saves your progress, logs, ratings and drills as a JSON file
+    (audio recordings are not included). Import replaces current data with a backup file.</p>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn ghost" id="mExport">↓ Export backup</button>
+      <button class="btn ghost" id="mImport">↑ Import backup</button>
+      <input type="file" id="mFile" accept="application/json,.json" style="display:none">
+    </div>
+
+    <label class="fld" style="margin-top:20px">Program controls</label>
+    <div class="modal-actions" style="justify-content:flex-start">
+      <button class="btn ghost" id="mRestart" style="color:var(--coral);border-color:var(--coral)">Restart day counter</button>
+      <button class="btn primary" id="mWipe" style="background:var(--coral);border-color:var(--coral)">Erase all data</button>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" id="mClose">Close</button></div>`;
+  document.getElementById('modalBg').classList.add('show');
+  document.getElementById('mClose').onclick=closeModal;
+  document.getElementById('mExport').onclick=exportData;
+  document.getElementById('mImport').onclick=()=>document.getElementById('mFile').click();
+  document.getElementById('mFile').onchange=importData;
+  document.getElementById('mRestart').onclick=()=>{
+    STATE.startDate=todayStr(); STATE.viewDay=1; saveState(); closeModal(); switchTab('dash');
+    toast('Program counter restarted.');
+  };
+  document.getElementById('mWipe').onclick=async()=>{
+    if(confirm('Erase ALL progress, logs, ratings, drills and recordings? This cannot be undone.')){
+      await audioClear();
+      STATE={startDate:todayStr(),completed:{},logs:[],viewDay:1,recordings:[],weakSpots:[]};
+      await saveState(); closeModal(); switchTab('dash'); toast('All data erased.');
+    }
+  };
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+document.getElementById('modalBg').addEventListener('click',e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+function exportData(){
+  const payload={app:'accent-studio',version:1,exported:new Date().toISOString(),
+    state:{startDate:STATE.startDate,completed:STATE.completed,logs:STATE.logs,
+      viewDay:STATE.viewDay,weakSpots:STATE.weakSpots,
+      recordings:STATE.recordings.map(r=>({...r}))}};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='accent-studio-backup-'+todayStr()+'.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast('Backup file downloaded.');
+}
+function importData(e){
+  const f=e.target.files&&e.target.files[0];
+  if(!f) return;
+  const fr=new FileReader();
+  fr.onload=async()=>{
+    try{
+      const data=JSON.parse(fr.result);
+      const st=data.state||data;
+      if(!st||!st.startDate) throw new Error('bad file');
+      STATE=Object.assign({startDate:todayStr(),completed:{},logs:[],viewDay:1,recordings:[],weakSpots:[]},st);
+      if(!Array.isArray(STATE.recordings)) STATE.recordings=[];
+      if(!Array.isArray(STATE.weakSpots)) STATE.weakSpots=[];
+      await saveState(); closeModal(); switchTab('dash');
+      toast('Backup restored. (Audio files are not part of backups.)');
+    }catch(err){ toast('That file could not be read as a valid backup.'); }
+  };
+  fr.readAsText(f);
+}
+
+/* ---------------- BOOT ---------------- */
+(async function(){
+  await loadState();
+  if(!STATE.viewDay) STATE.viewDay=suggestedDay();
+  render();
+})();
+</script>
+</body>
+</html>

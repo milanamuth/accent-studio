@@ -1,0 +1,10 @@
+{
+  "name": "accent-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Accent Studio — 60-day American accent trainer with AI feedback.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  }
+}
