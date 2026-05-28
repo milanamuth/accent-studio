@@ -78,11 +78,14 @@ function parseModelJson(text) {
   throw new Error('could not parse model JSON');
 }
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 async function callGemini({ prompt, audioBase64, mimeType }) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw httpError(500, 'GEMINI_API_KEY is not set. Add it in Vercel → Settings → Environment Variables, then redeploy.');
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  const primary = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  // Try the chosen model first, then fall back to others if it is overloaded/down.
+  const models = [...new Set([primary, 'gemini-flash-latest', 'gemini-2.0-flash'])];
   const body = {
     contents: [{
       role: 'user',
@@ -93,22 +96,47 @@ async function callGemini({ prompt, audioBase64, mimeType }) {
     }],
     generationConfig: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 1200 }
   };
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) {
-    const errTxt = await r.text().catch(() => '');
-    if (r.status === 400 && /API key not valid/i.test(errTxt)) throw httpError(500, 'Your Gemini API key was rejected. Check the GEMINI_API_KEY value in Vercel.');
-    if (r.status === 429) throw httpError(429, 'Gemini rate limit hit. Wait a minute and try again, or check your quota.');
-    throw httpError(502, 'Gemini request failed (' + r.status + '). ' + errTxt.slice(0, 200));
+
+  let lastErr = null;
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let r;
+      try {
+        r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      } catch (e) {
+        lastErr = httpError(502, 'Network error reaching Gemini.');
+        await sleep(700 * (attempt + 1));
+        continue;
+      }
+      if (r.ok) {
+        const data = await r.json();
+        const text = data && data.candidates && data.candidates[0]
+          && data.candidates[0].content && data.candidates[0].content.parts
+          && data.candidates[0].content.parts.map(p => p.text || '').join('');
+        return parseModelJson(text);
+      }
+      const errTxt = await r.text().catch(() => '');
+      // Hard errors: do not retry, surface immediately.
+      if (r.status === 400 && /API key not valid/i.test(errTxt)) {
+        throw httpError(500, 'Your Gemini API key was rejected. Check the GEMINI_API_KEY value in Vercel.');
+      }
+      // Transient errors: retry this model, then fall through to the next model.
+      if (r.status === 503 || r.status === 500 || r.status === 429) {
+        lastErr = httpError(r.status, 'transient');
+        await sleep(1000 * (attempt + 1));
+        continue;
+      }
+      // Other errors: stop retrying this model, try the next one.
+      lastErr = httpError(502, 'Gemini request failed (' + r.status + '). ' + errTxt.slice(0, 160));
+      break;
+    }
   }
-  const data = await r.json();
-  const text = data && data.candidates && data.candidates[0]
-    && data.candidates[0].content && data.candidates[0].content.parts
-    && data.candidates[0].content.parts.map(p => p.text || '').join('');
-  return parseModelJson(text);
+  // Everything was overloaded.
+  const status = (lastErr && lastErr.status) || 503;
+  if (status === 503 || status === 500) throw httpError(503, 'Gemini is overloaded right now on Google\u2019s side (not your setup). Wait 10 to 20 seconds and tap AI feedback again.');
+  if (status === 429) throw httpError(429, 'You have hit the Gemini free-tier rate limit. Wait a minute, then try again.');
+  throw lastErr || httpError(502, 'Gemini request failed. Try again shortly.');
 }
 
 async function callQwen({ prompt, audioBase64, mimeType }) {
