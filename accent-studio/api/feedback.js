@@ -72,9 +72,20 @@ function parseModelJson(text) {
   // Strip code fences if the model added them despite instructions.
   let t = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
   try { return JSON.parse(t); } catch (e) {}
-  // Last resort: extract the outermost JSON object.
+  // Extract the outermost JSON object.
   const a = t.indexOf('{'), b = t.lastIndexOf('}');
-  if (a >= 0 && b > a) return JSON.parse(t.slice(a, b + 1));
+  if (a >= 0 && b > a) {
+    try { return JSON.parse(t.slice(a, b + 1)); } catch (e) {}
+  }
+  // Last resort: try to repair a truncated object by closing open braces.
+  if (a >= 0) {
+    let s = t.slice(a);
+    // drop a trailing incomplete fragment after the last complete value
+    s = s.replace(/,\s*"[^"]*"\s*:?\s*[^,}\]]*$/, '');
+    const opens = (s.match(/{/g) || []).length, closes = (s.match(/}/g) || []).length;
+    s += '}'.repeat(Math.max(0, opens - closes));
+    try { return JSON.parse(s); } catch (e) {}
+  }
   throw new Error('could not parse model JSON');
 }
 
@@ -86,20 +97,30 @@ async function callGemini({ prompt, audioBase64, mimeType }) {
   const primary = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   // Try the chosen model first, then fall back to others if it is overloaded/down.
   const models = [...new Set([primary, 'gemini-flash-latest', 'gemini-2.0-flash'])];
-  const body = {
-    contents: [{
-      role: 'user',
-      parts: [
-        { text: prompt },
-        { inlineData: { mimeType: mimeType || 'audio/wav', data: audioBase64 } }
-      ]
-    }],
-    generationConfig: { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 1200 }
-  };
+
+  function buildBody(model) {
+    const gen = { responseMimeType: 'application/json', temperature: 0.4, maxOutputTokens: 2048 };
+    // 2.5 / 3.x models "think" by default, which can eat the output budget and
+    // truncate the JSON. Disable it so the full budget goes to the answer.
+    if (/gemini-(2\.5|3)/.test(model) || model === 'gemini-flash-latest') {
+      gen.thinkingConfig = { thinkingBudget: 0 };
+    }
+    return {
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType: mimeType || 'audio/wav', data: audioBase64 } }
+        ]
+      }],
+      generationConfig: gen
+    };
+  }
 
   let lastErr = null;
   for (const model of models) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const body = buildBody(model);
     for (let attempt = 0; attempt < 2; attempt++) {
       let r;
       try {
@@ -114,7 +135,15 @@ async function callGemini({ prompt, audioBase64, mimeType }) {
         const text = data && data.candidates && data.candidates[0]
           && data.candidates[0].content && data.candidates[0].content.parts
           && data.candidates[0].content.parts.map(p => p.text || '').join('');
-        return parseModelJson(text);
+        try {
+          return parseModelJson(text);
+        } catch (e) {
+          // Model returned 200 but the JSON was malformed or truncated.
+          // Retry this model once, then fall through to the next model.
+          lastErr = httpError(502, 'The model returned an incomplete assessment. Trying again.');
+          await sleep(300);
+          continue;
+        }
       }
       const errTxt = await r.text().catch(() => '');
       // Hard errors: do not retry, surface immediately.
