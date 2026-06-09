@@ -308,7 +308,7 @@
 
 <div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
 <div class="toast" id="toast"></div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ============================================================
    THE ACCENT STUDIO — standalone build (host anywhere)
@@ -946,7 +946,13 @@ const SKILLS=[
   {k:'intonation',label:'Intonation',color:'#c98bb9'},
   {k:'fluency',label:'Fluency & Flow',color:'#d9b86a'},
 ];
+
+  
 /* ---------------- STORAGE: IndexedDB (works on any static host) ---------- */
+const SB_URL  = 'https://uevoftnxdbrtmsgmfvbp.supabase.co';
+const SB_ANON = 'sb_publishable_PwQ9e3vDCuswAM9a6kHUPw_UTc_qWUf';
+const sb = window.supabase.createClient(SB_URL, SB_ANON);
+const _deviceId = (crypto.randomUUID && crypto.randomUUID()) || ('d'+Date.now());
 const DB_NAME='accentStudioDB', DB_VER=1, STATE_KEY='state';
 let _db=null, _mem={}, _idbOk=true;
 
@@ -999,8 +1005,68 @@ async function loadState(){
   if(!STATE.startDate){ STATE.startDate=todayStr(); await saveState(); }
 }
 let saveTimer=null;
-async function saveState(){ try{ await kvSet(STATE_KEY,STATE); }catch(e){ console.error('save failed',e); } }
+let _suppressPush = false;
+async function saveState(){
+  STATE.updatedAt = Date.now();
+  try{ await kvSet(STATE_KEY,STATE); }catch(e){ console.error('save failed',e); }
+  cloudQueuePush();
+}
 function queueSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveState,400); }
+
+/* ---------------- CLOUD SYNC (state) ---------------- */
+let _cloudTimer=null;
+function cloudQueuePush(){
+  if(_suppressPush) return;
+  clearTimeout(_cloudTimer);
+  _cloudTimer=setTimeout(cloudPush, 800);
+}
+async function cloudUser(){ return (await sb.auth.getUser()).data.user; }
+
+async function cloudPush(){
+  const u=await cloudUser(); if(!u) return;
+  try{
+    await sb.from('app_state').upsert({
+      user_id:u.id, state:STATE,
+      updated_at:STATE.updatedAt||Date.now(), device:_deviceId
+    });
+  }catch(e){ console.warn('cloud push failed', e); }
+}
+
+async function cloudPull(){
+  const u=await cloudUser(); if(!u) return;
+  const { data, error } = await sb
+    .from('app_state').select('state,updated_at')
+    .eq('user_id',u.id).maybeSingle();
+  if(error){ console.warn('cloud pull failed', error); return; }
+
+  const localAt=STATE.updatedAt||0;
+  if(!data){ await cloudPush(); return; }            // first device seeds the cloud
+  const cloudAt=data.updated_at||0;
+
+  if(cloudAt > localAt){                             // cloud is newer, adopt it
+    _suppressPush=true;
+    STATE=Object.assign(STATE, data.state);
+    try{ await kvSet(STATE_KEY, STATE); }catch(e){}  // local write, no timestamp bump
+    _suppressPush=false;
+    render();
+    toast && toast('Synced from the cloud.');
+  } else if(localAt > cloudAt){                      // local is newer, push it up
+    await cloudPush();
+  }
+}
+
+async function signInEmail(email){
+  const { error } = await sb.auth.signInWithOtp({
+    email, options:{ emailRedirectTo: location.origin }
+  });
+  return error;
+}
+async function signOutCloud(){ await sb.auth.signOut(); renderSyncUI(); }
+
+sb.auth.onAuthStateChange((_evt, session)=>{
+  if(session) cloudPull();
+  renderSyncUI();
+});
 
 /* ---------------- spaced-repetition config ---------------- */
 const SR_INTERVALS=[1,3,7,14]; // days until next review after each practice
@@ -2203,12 +2269,40 @@ function viewMethod(){
     <p>Everything — progress, ratings and audio — is stored only in this browser on this device. Nothing is
     uploaded. Clearing your browser data will erase it, so use <b>Settings → Export backup</b> periodically.
     Note that audio recordings are not included in the text backup.</p>
+    <div id="syncBox" style="margin-top:14px"></div>
   </div></div>`;
 }
 
 /* ============================================================
    BINDINGS
    ============================================================ */
+
+
+async function renderSyncUI(){
+  const box=document.getElementById('syncBox'); if(!box) return;
+  const u=await cloudUser();
+  if(u){
+    box.innerHTML =
+      '<p>Signed in as <b>'+u.email+'</b>. Progress syncs automatically.</p>'+
+      '<button class="btn ghost" id="sbSync">⟳ Sync now</button> '+
+      '<button class="btn ghost" id="sbOut">Sign out</button>';
+    document.getElementById('sbSync').onclick=()=>cloudPull();
+    document.getElementById('sbOut').onclick=signOutCloud;
+  }else{
+    box.innerHTML =
+      '<p>Sign in to sync progress across devices.</p>'+
+      '<input id="sbEmail" type="email" placeholder="you@email.com" '+
+      'style="padding:8px;border-radius:8px;width:60%"> '+
+      '<button class="btn ghost" id="sbLink">Send magic link</button>';
+    document.getElementById('sbLink').onclick=async()=>{
+      const email=document.getElementById('sbEmail').value.trim();
+      if(!email) return;
+      const err=await signInEmail(email);
+      toast(err? 'Could not send link.' : 'Check your email for the sign-in link.');
+    };
+  }
+}
+  
 function bindView(){
   app.querySelectorAll('[data-goday]').forEach(el=>el.addEventListener('click',()=>{
     STATE.viewDay=+el.dataset.goday; queueSave(); switchTab('today');
