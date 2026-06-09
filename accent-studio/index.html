@@ -950,7 +950,7 @@ const SKILLS=[
   
 /* ---------------- STORAGE: IndexedDB (works on any static host) ---------- */
 const SB_URL  = 'https://uevoftnxdbrtmsgmfvbp.supabase.co';
-const SB_ANON = 'sb_publishable_PwQ9e3vDCuswAM9a6kHUPw_UTc_qWUf';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVldm9mdG54ZGJydG1zZ21mdmJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMDQ0NjIsImV4cCI6MjA5NjU4MDQ2Mn0.P6JX8AMstBd1QEAFlCj4nKVQcua0SDh4jfAeaipR52k';
 const sb = window.supabase.createClient(SB_URL, SB_ANON);
 const _deviceId = (crypto.randomUUID && crypto.randomUUID()) || ('d'+Date.now());
 const DB_NAME='accentStudioDB', DB_VER=1, STATE_KEY='state';
