@@ -1374,7 +1374,7 @@ async function playRec(id){
 const app=document.getElementById('app');
 let CURRENT_VIEW='dash';
 
-function render(){
+ffunction render(){
   const v=CURRENT_VIEW;
   if(v==='dash') app.innerHTML=viewDash();
   else if(v==='today') app.innerHTML=viewToday();
@@ -1387,6 +1387,7 @@ function render(){
   bindView();
   if(v==='today') renderRecorder();
   if(v==='recordings') initCompare();
+  if(v==='method') renderSyncUI();        // ← add this line
 }
 
 /* ---------------- DASHBOARD ---------------- */
