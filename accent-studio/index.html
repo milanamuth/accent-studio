@@ -1374,7 +1374,7 @@ async function playRec(id){
 const app=document.getElementById('app');
 let CURRENT_VIEW='dash';
 
-ffunction render(){
+function render(){
   const v=CURRENT_VIEW;
   if(v==='dash') app.innerHTML=viewDash();
   else if(v==='today') app.innerHTML=viewToday();
