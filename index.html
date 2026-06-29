@@ -1034,6 +1034,7 @@ let saveTimer=null;
 let _suppressPush = false;
 let _seeded = false;     // true once local STATE holds real data (genuine save, or adopted from cloud)
 let _pulling = false;    // re-entrancy guard so concurrent cloudPull() calls don't interleave
+let _cloudSeen = 0;      // server modified timestamp of the last row we read/wrote; replaces client-clock LWW
 async function saveState(){
   _seeded = true;                     // a genuine save means we hold real data
   STATE.updatedAt = Date.now();
@@ -1055,10 +1056,11 @@ async function cloudPush(){
   const u=await cloudUser(); if(!u) return;
   if(!_seeded) return;                 // never push pristine/unreconciled defaults over the cloud
   try{
-    await sb.from('app_state').upsert({
+    const { data } = await sb.from('app_state').upsert({
       user_id:u.id, state:STATE,
       updated_at:STATE.updatedAt||Date.now(), device:_deviceId
-    });
+    }).select('modified').maybeSingle();
+    if(data && data.modified) _cloudSeen = Date.parse(data.modified); // record server time we just wrote
   }catch(e){ console.warn('cloud push failed', e); }
 }
 
@@ -1067,11 +1069,9 @@ async function cloudPull(){
   try{
     const u=await cloudUser(); if(!u) return;
     const { data, error } = await sb
-      .from('app_state').select('state,updated_at')
+      .from('app_state').select('state,updated_at,modified')  // now also fetches server timestamp
       .eq('user_id',u.id).maybeSingle();
     if(error){ console.warn('cloud pull failed', error); return; }
-
-    const localAt=STATE.updatedAt||0;
 
     if(!data){                                       // no cloud row yet for this account
       if(_seeded){ await cloudPush(); }              //   real local data -> seed cloud with it
@@ -1084,22 +1084,25 @@ async function cloudPull(){
       return;
     }
 
-    const cloudAt=data.updated_at||0;
-    const cloudVer=(data.state && data.state.schemaVersion)||0;
+    const serverMod   = data.modified ? Date.parse(data.modified) : 0;
+    const cloudVer    = (data.state && data.state.schemaVersion)||0;
 
-    // Adopt cloud when local is still pristine (cloud wins over an unseeded device, regardless of
-    // timestamp), or cloud is a newer schema, or cloud is newer by time. This is what makes a fresh
-    // magic-link device take the real account state instead of clobbering it with defaults.
-    if(!_seeded || cloudVer > SCHEMA_VERSION || cloudAt > localAt){
+    // Server-clock LWW: compare _cloudSeen (the server time of the last row we touched) against
+    // the current server modified timestamp. This eliminates client-clock skew entirely.
+    // Also always adopt if local is pristine/unseeded, or cloud carries a newer schema version.
+    const cloudIsNewer = serverMod > _cloudSeen;
+
+    if(!_seeded || cloudVer > SCHEMA_VERSION || cloudIsNewer){
       _suppressPush=true;
       STATE=migrateState(Object.assign(STATE, data.state));
       _seeded=true;
+      _cloudSeen = serverMod;                        // remember the server time we just adopted
       try{ await kvSet(STATE_KEY, STATE); }catch(e){}
       _suppressPush=false;
       render();
       toast && toast('Synced from the cloud.');
-    } else if(localAt > cloudAt){                    // local genuinely newer (and seeded) -> push
-      await cloudPush();
+    } else {                                         // we are current or ahead -> push
+      if(_seeded) await cloudPush();
     }
   } finally { _pulling=false; }
 }
