@@ -1021,6 +1021,7 @@ let STATE={ startDate:null, completed:{}, logs:[], viewDay:1, recordings:[], wea
 async function loadState(){
   try{ const s=await kvGet(STATE_KEY); if(s&&typeof s==='object') STATE=Object.assign(STATE,s); }catch(e){}
   STATE=migrateState(STATE);
+  if(STATE.updatedAt) _seeded=true;   // a real prior save existed -> not pristine
   if(!Array.isArray(STATE.recordings)) STATE.recordings=[];
   if(!Array.isArray(STATE.weakSpots)) STATE.weakSpots=[];
   if(!Array.isArray(STATE.logs)) STATE.logs=[];
@@ -1031,7 +1032,10 @@ async function loadState(){
 }
 let saveTimer=null;
 let _suppressPush = false;
+let _seeded = false;     // true once local STATE holds real data (genuine save, or adopted from cloud)
+let _pulling = false;    // re-entrancy guard so concurrent cloudPull() calls don't interleave
 async function saveState(){
+  _seeded = true;                     // a genuine save means we hold real data
   STATE.updatedAt = Date.now();
   try{ await kvSet(STATE_KEY,STATE); }catch(e){ console.error('save failed',e); }
   cloudQueuePush();
@@ -1049,6 +1053,7 @@ async function cloudUser(){ return (await sb.auth.getUser()).data.user; }
 
 async function cloudPush(){
   const u=await cloudUser(); if(!u) return;
+  if(!_seeded) return;                 // never push pristine/unreconciled defaults over the cloud
   try{
     await sb.from('app_state').upsert({
       user_id:u.id, state:STATE,
@@ -1058,37 +1063,45 @@ async function cloudPush(){
 }
 
 async function cloudPull(){
-  const u=await cloudUser(); if(!u) return;
-  const { data, error } = await sb
-    .from('app_state').select('state,updated_at')
-    .eq('user_id',u.id).maybeSingle();
-  if(error){ console.warn('cloud pull failed', error); return; }
+  if(_pulling) return; _pulling=true;
+  try{
+    const u=await cloudUser(); if(!u) return;
+    const { data, error } = await sb
+      .from('app_state').select('state,updated_at')
+      .eq('user_id',u.id).maybeSingle();
+    if(error){ console.warn('cloud pull failed', error); return; }
 
-  const localAt=STATE.updatedAt||0;
-  if(!data){ await cloudPush(); return; }            // first device seeds the cloud
-  const cloudAt=data.updated_at||0;
-  const cloudVer=(data.state && data.state.schemaVersion)||0;
+    const localAt=STATE.updatedAt||0;
 
-  if(cloudVer > SCHEMA_VERSION){                      // cloud written by a NEWER client
-    _suppressPush=true;                              // adopt it; never overwrite with our older state
-    STATE=migrateState(Object.assign(STATE, data.state));
-    try{ await kvSet(STATE_KEY, STATE); }catch(e){}
-    _suppressPush=false;
-    render();
-    toast && toast('Synced from the cloud.');
-    return;
-  }
+    if(!data){                                       // no cloud row yet for this account
+      if(_seeded){ await cloudPush(); }              //   real local data -> seed cloud with it
+      else {                                         //   pristine first device -> create the real seed
+        if(!STATE.startDate) STATE.startDate=todayStr();
+        _seeded=true;
+        await saveState();                           //   stamps updatedAt and pushes (now allowed)
+        render();
+      }
+      return;
+    }
 
-  if(cloudAt > localAt){                             // cloud is newer, adopt it
-    _suppressPush=true;
-    STATE=migrateState(Object.assign(STATE, data.state));
-    try{ await kvSet(STATE_KEY, STATE); }catch(e){}  // local write, no timestamp bump
-    _suppressPush=false;
-    render();
-    toast && toast('Synced from the cloud.');
-  } else if(localAt > cloudAt){                      // local is newer, push it up
-    await cloudPush();
-  }
+    const cloudAt=data.updated_at||0;
+    const cloudVer=(data.state && data.state.schemaVersion)||0;
+
+    // Adopt cloud when local is still pristine (cloud wins over an unseeded device, regardless of
+    // timestamp), or cloud is a newer schema, or cloud is newer by time. This is what makes a fresh
+    // magic-link device take the real account state instead of clobbering it with defaults.
+    if(!_seeded || cloudVer > SCHEMA_VERSION || cloudAt > localAt){
+      _suppressPush=true;
+      STATE=migrateState(Object.assign(STATE, data.state));
+      _seeded=true;
+      try{ await kvSet(STATE_KEY, STATE); }catch(e){}
+      _suppressPush=false;
+      render();
+      toast && toast('Synced from the cloud.');
+    } else if(localAt > cloudAt){                    // local genuinely newer (and seeded) -> push
+      await cloudPush();
+    }
+  } finally { _pulling=false; }
 }
 
 async function signInEmail(email){
@@ -2505,14 +2518,18 @@ function importData(e){
 (async function(){
   await loadState();
   const user = await cloudUser();
-  if(user) await cloudPull();          // pull BEFORE we ever stamp/seed local defaults
+  if(user) await cloudPull();          // if the session is ready at boot, reconcile now
   if(!STATE.startDate){
+    // Cosmetic local start date so the UI works. Deliberately NO updatedAt, NO save, NO push:
+    // the state stays "pristine" (_seeded false) so a late-arriving session on a fresh
+    // magic-link device adopts the cloud instead of clobbering it with defaults.
     STATE.startDate = todayStr();
-    await saveState();                 // safe now: cloud already reconciled
+    try{ await kvSet(STATE_KEY, STATE); }catch(e){}
   }
   if(!STATE.viewDay) STATE.viewDay = suggestedDay();
   render();
-  _bootDone = true;                    // arm onAuthStateChange for subsequent sign-ins
+  _bootDone = true;                    // arm onAuthStateChange for sign-ins that happen after boot
+  if(await cloudUser()) cloudPull();   // catch a session that finished establishing during boot
 })();
 </script>
 </body>
