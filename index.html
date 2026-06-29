@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Accent Studio — 60-Day American Accent Trainer</title>
 <meta name="description" content="A 60-day structured program to build a natural American accent: daily drills, in-app voice recording, progress dashboard and spaced-repetition weak-spot drills.">
@@ -308,7 +311,7 @@
 
 <div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
 <div class="toast" id="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
 <script>
 /* ============================================================
    THE ACCENT STUDIO — standalone build (host anywhere)
@@ -987,22 +990,44 @@ function idbDo(store,mode,fn){
 async function kvGet(k){ try{ return await idbDo('kv','readonly',st=>st.get(k)); }catch(e){ return _mem[k]; } }
 async function kvSet(k,v){ try{ await idbDo('kv','readwrite',st=>st.put(v,k)); }catch(e){ _mem[k]=v; } }
 async function audioPut(id,blob){ try{ await idbDo('audio','readwrite',st=>st.put(blob,id)); }catch(e){ _mem['a:'+id]=blob; } }
-async function audioGet(id){ try{ const b=await idbDo('audio','readonly',st=>st.get(id)); return b||_mem['a:'+id]; }catch(e){ return _mem['a:'+id]; } }
+async function audioGet(id){
+  let b;
+  try{ b=await idbDo('audio','readonly',st=>st.get(id)); }catch(e){}
+  if(!b) b=_mem['a:'+id];
+  if(b) return b;
+  // local miss: pull from cloud, then cache locally for next time
+  const cloud=await cloudDownloadAudio(id);
+  if(cloud){ try{ await audioPut(id, cloud); }catch(e){} }
+  return cloud||null;
+}
 async function audioDel(id){ try{ await idbDo('audio','readwrite',st=>st.delete(id)); }catch(e){} delete _mem['a:'+id]; }
 async function audioClear(){ try{ await idbDo('audio','readwrite',st=>st.clear()); }catch(e){} _mem={}; }
 
+const SCHEMA_VERSION = 1;
+/* Normalize any state (local or cloud) up to the current shape.
+   Today this only stamps the version; add a migration rung whenever
+   the STATE shape changes so old rows upgrade instead of corrupting. */
+function migrateState(s){
+  if(!s || typeof s!=='object') return s;
+  // const v = s.schemaVersion || 0;
+  // if(v < 2){ /* reshape fields here */ s.schemaVersion = 2; }
+  s.schemaVersion = SCHEMA_VERSION;
+  return s;
+}
+
 let STATE={ startDate:null, completed:{}, logs:[], viewDay:1, recordings:[], weakSpots:[],
-  baseline:null, earned:[], targetScore:85 };
+  baseline:null, earned:[], targetScore:85, schemaVersion:SCHEMA_VERSION };
 
 async function loadState(){
   try{ const s=await kvGet(STATE_KEY); if(s&&typeof s==='object') STATE=Object.assign(STATE,s); }catch(e){}
+  STATE=migrateState(STATE);
   if(!Array.isArray(STATE.recordings)) STATE.recordings=[];
   if(!Array.isArray(STATE.weakSpots)) STATE.weakSpots=[];
   if(!Array.isArray(STATE.logs)) STATE.logs=[];
   if(!Array.isArray(STATE.earned)) STATE.earned=[];
   if(!STATE.completed) STATE.completed={};
   if(typeof STATE.targetScore!=='number') STATE.targetScore=85;
-  if(!STATE.startDate){ STATE.startDate=todayStr(); await saveState(); }
+  // do NOT set startDate or save here; defer to after cloudPull (see BOOT) to avoid clobbering cloud
 }
 let saveTimer=null;
 let _suppressPush = false;
@@ -1042,10 +1067,21 @@ async function cloudPull(){
   const localAt=STATE.updatedAt||0;
   if(!data){ await cloudPush(); return; }            // first device seeds the cloud
   const cloudAt=data.updated_at||0;
+  const cloudVer=(data.state && data.state.schemaVersion)||0;
+
+  if(cloudVer > SCHEMA_VERSION){                      // cloud written by a NEWER client
+    _suppressPush=true;                              // adopt it; never overwrite with our older state
+    STATE=migrateState(Object.assign(STATE, data.state));
+    try{ await kvSet(STATE_KEY, STATE); }catch(e){}
+    _suppressPush=false;
+    render();
+    toast && toast('Synced from the cloud.');
+    return;
+  }
 
   if(cloudAt > localAt){                             // cloud is newer, adopt it
     _suppressPush=true;
-    STATE=Object.assign(STATE, data.state);
+    STATE=migrateState(Object.assign(STATE, data.state));
     try{ await kvSet(STATE_KEY, STATE); }catch(e){}  // local write, no timestamp bump
     _suppressPush=false;
     render();
@@ -1063,8 +1099,28 @@ async function signInEmail(email){
 }
 async function signOutCloud(){ await sb.auth.signOut(); renderSyncUI(); }
 
+/* ---------------- CLOUD SYNC (audio, Phase 2) ----------------
+   Dormant until a private Storage bucket named 'recordings' exists
+   with per-user RLS policies. Until then these no-op safely. */
+async function cloudUploadAudio(id, blob){
+  const u=await cloudUser(); if(!u||!blob) return;
+  try{ await sb.storage.from('recordings')
+    .upload(u.id+'/'+id, blob, { upsert:true, contentType: blob.type||'audio/webm' }); }
+  catch(e){ console.warn('audio upload failed', e); }
+}
+async function cloudDownloadAudio(id){
+  const u=await cloudUser(); if(!u) return null;
+  try{ const { data }=await sb.storage.from('recordings').download(u.id+'/'+id); return data||null; }
+  catch(e){ return null; }
+}
+async function cloudDeleteAudio(id){
+  const u=await cloudUser(); if(!u) return;
+  try{ await sb.storage.from('recordings').remove([u.id+'/'+id]); }catch(e){}
+}
+
+let _bootDone = false;
 sb.auth.onAuthStateChange((_evt, session)=>{
-  if(session) cloudPull();
+  if(_bootDone && session) cloudPull();
   renderSyncUI();
 });
 
@@ -1339,6 +1395,7 @@ async function saveRecording(){
   const label=(labelEl&&labelEl.value.trim())||autoLabel(d);
   const id='rec_'+Date.now();
   await audioPut(id,Rec.pendingBlob);
+  cloudUploadAudio(id, Rec.pendingBlob);   // phase 2: fire-and-forget cloud upload
   STATE.recordings.push({id,day:d,date:todayStr(),label,
     benchmark:!!(benchEl&&benchEl.checked),duration:Rec.pendingDur||0,
     mime:Rec.mime,ts:Date.now()});
@@ -1351,6 +1408,7 @@ async function deleteRecording(id){
   const r=STATE.recordings.find(x=>x.id===id);
   if(!confirm('Delete this recording? "'+(r?r.label:'')+'"')) return;
   await audioDel(id);
+  cloudDeleteAudio(id);   // phase 2: also remove from cloud
   STATE.recordings=STATE.recordings.filter(x=>x.id!==id);
   await saveState();
   render();
@@ -2299,7 +2357,12 @@ async function renderSyncUI(){
       const email=document.getElementById('sbEmail').value.trim();
       if(!email) return;
       const err=await signInEmail(email);
-      toast(err? 'Could not send link.' : 'Check your email for the sign-in link.');
+      if(err){
+        console.error('Sign-in error:', err);
+        toast('Sign-in failed: '+(err.message||'unknown error'));
+      } else {
+        toast('Check your email for the sign-in link.');
+      }
     };
   }
 }
@@ -2441,8 +2504,15 @@ function importData(e){
 /* ---------------- BOOT ---------------- */
 (async function(){
   await loadState();
-  if(!STATE.viewDay) STATE.viewDay=suggestedDay();
+  const user = await cloudUser();
+  if(user) await cloudPull();          // pull BEFORE we ever stamp/seed local defaults
+  if(!STATE.startDate){
+    STATE.startDate = todayStr();
+    await saveState();                 // safe now: cloud already reconciled
+  }
+  if(!STATE.viewDay) STATE.viewDay = suggestedDay();
   render();
+  _bootDone = true;                    // arm onAuthStateChange for subsequent sign-ins
 })();
 </script>
 </body>
