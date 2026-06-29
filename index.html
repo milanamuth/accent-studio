@@ -1011,7 +1011,7 @@ function migrateState(s){
   if(!s || typeof s!=='object') return s;
   // const v = s.schemaVersion || 0;
   // if(v < 2){ /* reshape fields here */ s.schemaVersion = 2; }
-  s.schemaVersion = SCHEMA_VERSION;
+  s.schemaVersion = Math.max(s.schemaVersion||0, SCHEMA_VERSION);  // only ever stamp forward
   return s;
 }
 
