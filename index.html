@@ -312,6 +312,8 @@
 <div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2"></script>
+<script src="data/drills.js?v=1"></script>
+<script src="js/drill-engine.js?v=1"></script>
 <script>
 /* ============================================================
    THE ACCENT STUDIO — standalone build (host anywhere)
@@ -1642,7 +1644,8 @@ function dashDrills(){
     <div class="dash-drill">
       <div><div class="dd-label">${escapeHtml(s.label)}</div>
         <div class="dd-sub">Review ${Math.min(s.reps+1,SR_INTERVALS.length+1)} of ${SR_INTERVALS.length+1}</div></div>
-      <button class="btn primary mini" data-practiced="${s.id}">✓ Done</button>
+      ${(typeof getDrillPack==='function'&&getDrillPack(s.label))?`<button class="btn primary mini" data-openpack="${s.id}">🎧 Practice</button>`:''}
+      <button class="btn ${(typeof getDrillPack==='function'&&getDrillPack(s.label))?'ghost':'primary'} mini" data-practiced="${s.id}">✓ Done</button>
     </div>`).join('');
   return `<div class="card" style="margin-top:16px">
     <div class="section-label">Drills due today · ${due.length}</div>
@@ -2088,15 +2091,17 @@ function drillCardHtml(s){
   const filled=s.mastered?total:s.reps;
   for(let i=0;i<total;i++) dots+=`<span class="sr-dot ${i<filled?'on':''}"></span>`;
   const cls='drill-card '+(s.mastered?'mastered':(spotDue(s)?'due':''));
+  const hasPack=(typeof getDrillPack==='function')&&getDrillPack(s.label);
+  const practiceBtn=hasPack?`<button class="btn primary mini" data-openpack="${s.id}">🎧 Practice</button> `:'';
   let actions='';
   if(s.mastered){
     actions=`<button class="btn ghost mini" data-delspot="${s.id}">Remove</button>`;
   } else if(spotDue(s)){
-    actions=`<button class="btn primary mini" data-practiced="${s.id}">✓ Practiced</button>
+    actions=`${practiceBtn}<button class="btn ${hasPack?'ghost':'primary'} mini" data-practiced="${s.id}">✓ Practiced</button>
       <button class="btn ghost mini" data-snooze="${s.id}">Snooze 1d</button>
       <button class="btn ghost mini" data-delspot="${s.id}">Remove</button>`;
   } else {
-    actions=`<button class="btn ghost mini" data-practiced="${s.id}">Practice now</button>
+    actions=`${practiceBtn}<button class="btn ghost mini" data-practiced="${s.id}">Practice now</button>
       <button class="btn ghost mini" data-delspot="${s.id}">Remove</button>`;
   }
   const dueTxt=s.mastered?'Mastered':(spotDue(s)?'Due today':'Next review: '+s.dueDate);
@@ -2449,6 +2454,10 @@ function bindView(){
   const sb=document.getElementById('saveLog'); if(sb) sb.addEventListener('click',saveLogSession);
   const asb=document.getElementById('addSpotBtn'); if(asb) asb.addEventListener('click',addSpot);
   app.querySelectorAll('[data-practiced]').forEach(el=>el.addEventListener('click',()=>practiceSpot(el.dataset.practiced)));
+  app.querySelectorAll('[data-openpack]').forEach(el=>el.addEventListener('click',()=>{
+    const sp=STATE.weakSpots.find(w=>w.id===el.dataset.openpack);
+    if(sp && typeof openDrillPack==='function') openDrillPack(sp.label, sp.id);
+  }));
   app.querySelectorAll('[data-snooze]').forEach(el=>el.addEventListener('click',()=>snoozeSpot(el.dataset.snooze)));
   app.querySelectorAll('[data-delspot]').forEach(el=>el.addEventListener('click',()=>removeSpot(el.dataset.delspot)));
   bindRecItems(app);
