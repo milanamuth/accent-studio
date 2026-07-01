@@ -1194,7 +1194,10 @@ const COMMON_SPOTS=["The R sound (general)","R after vowels","NURSE / ER vowel",
 const BENCH_DAYS=[1,7,14,21,30,37,44,51,57,59];
 
 /* ---------------- date / derived helpers ---------------- */
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function todayStr(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
 function addDays(iso,n){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 function daysSinceStart(){
   const a=new Date(STATE.startDate+'T00:00:00'), b=new Date(todayStr()+'T00:00:00');
