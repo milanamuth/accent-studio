@@ -1009,13 +1009,14 @@ const SCHEMA_VERSION = 1;
    the STATE shape changes so old rows upgrade instead of corrupting. */
 function migrateState(s){
   if(!s || typeof s!=='object') return s;
+  if(!Array.isArray(s.deletedRecordings)) s.deletedRecordings=[];
   // const v = s.schemaVersion || 0;
   // if(v < 2){ /* reshape fields here */ s.schemaVersion = 2; }
   s.schemaVersion = Math.max(s.schemaVersion||0, SCHEMA_VERSION);  // only ever stamp forward
   return s;
 }
 
-let STATE={ startDate:null, completed:{}, logs:[], viewDay:1, recordings:[], weakSpots:[],
+let STATE={ startDate:null, completed:{}, logs:[], viewDay:1, recordings:[], deletedRecordings:[], weakSpots:[],
   baseline:null, earned:[], targetScore:85, schemaVersion:SCHEMA_VERSION };
 
 async function loadState(){
@@ -1044,6 +1045,34 @@ async function saveState(){
 function queueSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveState,400); }
 
 /* ---------------- CLOUD SYNC (state) ---------------- */
+/* Recordings are a set, not a scalar: two devices can each add a clip between
+   syncs, so a whole-array LWW replace silently drops whichever device pushed
+   second-to-last. These three helpers turn every pull into a union merge
+   instead of a replace. Deletes ride along as tombstones so a merge can't
+   resurrect something one device already removed. */
+function mergeTombstones(a,b){
+  const m=new Map();
+  for(const t of [...(a||[]),...(b||[])]) if(t&&t.id) m.set(t.id,t);
+  return [...m.values()];
+}
+function mergeRecordings(localRecs, cloudRecs, tombs){
+  const dead=new Set((tombs||[]).map(t=>t.id));
+  const byId=new Map();
+  const signal=x=>(x.benchmark?2:0)+(x.feedback?1:0);
+  for(const r of [...(cloudRecs||[]), ...(localRecs||[])]){   // local last: local field edit wins a tie
+    if(!r||!r.id||dead.has(r.id)) continue;
+    const prev=byId.get(r.id);
+    if(!prev){ byId.set(r.id,r); continue; }
+    if(signal(r)>signal(prev)) byId.set(r.id,r);
+    else if(signal(r)===signal(prev) && (r.ts||0)>=(prev.ts||0)) byId.set(r.id,r);
+  }
+  return [...byId.values()].sort((a,b)=>(a.ts||0)-(b.ts||0));
+}
+function sameIds(a,b){
+  const s=x=>[...new Set((x||[]).map(r=>r.id))].sort().join(',');
+  return s(a)===s(b);
+}
+
 let _cloudTimer=null;
 function cloudQueuePush(){
   if(_suppressPush) return;
@@ -1091,19 +1120,33 @@ async function cloudPull(){
     // the current server modified timestamp. This eliminates client-clock skew entirely.
     // Also always adopt if local is pristine/unseeded, or cloud carries a newer schema version.
     const cloudIsNewer = serverMod > _cloudSeen;
+    const adoptScalars = (!_seeded || cloudVer > SCHEMA_VERSION || cloudIsNewer);
 
-    if(!_seeded || cloudVer > SCHEMA_VERSION || cloudIsNewer){
-      _suppressPush=true;
-      STATE=migrateState(Object.assign(STATE, data.state));
-      _seeded=true;
-      _cloudSeen = serverMod;                        // remember the server time we just adopted
-      try{ await kvSet(STATE_KEY, STATE); }catch(e){}
-      _suppressPush=false;
-      render();
-      toast && toast('Synced from the cloud.');
-    } else {                                         // we are current or ahead -> push
-      if(_seeded) await cloudPush();
+    // Recordings + tombstones ALWAYS union, independent of scalar LWW, so neither
+    // device's array can clobber the other's (this is the fix for the AUD-2 bug:
+    // whichever device pushed last was silently deleting the other's clips).
+    const cloudRecs = (data.state && data.state.recordings) || [];
+    const tombs     = mergeTombstones(STATE.deletedRecordings, data.state && data.state.deletedRecordings);
+    const mergedRecs= mergeRecordings(STATE.recordings, cloudRecs, tombs);
+    const cloudMissingSome = !sameIds(cloudRecs, mergedRecs)
+      || !sameIds((data.state && data.state.deletedRecordings)||[], tombs);
+
+    _suppressPush=true;
+    if(adoptScalars){
+      STATE=migrateState(Object.assign(STATE, data.state));   // scalars by server-clock LWW, unchanged
+      _cloudSeen = serverMod;
     }
+    STATE.recordings        = mergedRecs;                      // union, always
+    STATE.deletedRecordings = tombs;                            // union, always
+    _seeded=true;
+    try{ await kvSet(STATE_KEY, STATE); }catch(e){}
+    _suppressPush=false;
+
+    render();
+    if(adoptScalars) toast && toast('Synced from the cloud.');
+    // push back whenever we hold recordings/tombstones the cloud row lacks, or
+    // (prior behavior, unchanged) when we're ahead on everything else
+    if(cloudMissingSome || (!adoptScalars && _seeded)) await cloudPush();
   } finally { _pulling=false; }
 }
 
@@ -1426,6 +1469,7 @@ async function deleteRecording(id){
   await audioDel(id);
   cloudDeleteAudio(id);   // phase 2: also remove from cloud
   STATE.recordings=STATE.recordings.filter(x=>x.id!==id);
+  (STATE.deletedRecordings=STATE.deletedRecordings||[]).push({id,ts:Date.now()});
   await saveState();
   render();
 }
@@ -2476,7 +2520,7 @@ function openSettings(){
   document.getElementById('mWipe').onclick=async()=>{
     if(confirm('Erase ALL progress, logs, ratings, drills and recordings? This cannot be undone.')){
       await audioClear();
-      STATE={startDate:todayStr(),completed:{},logs:[],viewDay:1,recordings:[],weakSpots:[],baseline:null,earned:[],targetScore:85};
+      STATE={startDate:todayStr(),completed:{},logs:[],viewDay:1,recordings:[],deletedRecordings:[],weakSpots:[],baseline:null,earned:[],targetScore:85};
       await saveState(); closeModal(); switchTab('dash'); toast('All data erased.');
     }
   };
@@ -2507,8 +2551,9 @@ function importData(e){
       const data=JSON.parse(fr.result);
       const st=data.state||data;
       if(!st||!st.startDate) throw new Error('bad file');
-      STATE=Object.assign({startDate:todayStr(),completed:{},logs:[],viewDay:1,recordings:[],weakSpots:[]},st);
+      STATE=Object.assign({startDate:todayStr(),completed:{},logs:[],viewDay:1,recordings:[],deletedRecordings:[],weakSpots:[]},st);
       if(!Array.isArray(STATE.recordings)) STATE.recordings=[];
+      if(!Array.isArray(STATE.deletedRecordings)) STATE.deletedRecordings=[];
       if(!Array.isArray(STATE.weakSpots)) STATE.weakSpots=[];
       await saveState(); closeModal(); switchTab('dash');
       toast('Backup restored. (Audio files are not part of backups.)');
