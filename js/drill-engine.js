@@ -101,8 +101,11 @@
       <div class="dp-rec-row">
         <button class="btn ghost mini" id="dpHear">\u25B6 Hear it</button>
         <button class="btn primary mini" id="dpRec">\u25CF Record</button>
+        <span id="dpRecTimer" style="font-family:'JetBrains Mono',monospace;color:var(--ink-soft);font-size:13px;min-width:44px;display:inline-block"></span>
+        <button class="btn ghost mini" id="dpPlayback" style="display:none">\u25B6 Playback</button>
         <button class="btn ghost mini" id="dpNext">Next line \u2192</button>
       </div>
+      <audio id="dpPlaybackAudio" style="display:none"></audio>
       <div id="dpScore" class="dp-score"></div>
     </div>`;
   }
@@ -199,7 +202,9 @@
     }
     try{ data = await res.json(); }catch(e){ data=null; }
     if(!data || !data.ok){
-      const msg = (data && (data.message || data.error)) || 'No usable score came back. Try again.';
+      const base = (data && (data.message || data.error)) || 'No usable score came back. Try again.';
+      const reason = data && data.reason;
+      const msg = reason ? (base + ' (Azure reason: ' + reason + ')') : base;
       box.innerHTML = `<p class="dp-quiz-help">${escapeHtml(msg)}</p>`;
       return;
     }
@@ -226,23 +231,49 @@
     try{ DP.rec = mime ? new MediaRecorder(DP.stream,{mimeType:mime}) : new MediaRecorder(DP.stream); }
     catch(e){ try{ DP.rec = new MediaRecorder(DP.stream); }catch(e2){ toast && toast('Recording not supported.'); return; } }
     DP.chunks=[]; DP.mime = DP.rec.mimeType || mime || 'audio/webm';
+    DP.startTs = Date.now();
     DP.rec.ondataavailable = e=>{ if(e.data && e.data.size) DP.chunks.push(e.data); };
     DP.rec.onstop = ()=>{
       DP.active=false;
+      if(DP.timer){ clearInterval(DP.timer); DP.timer=null; }
       btn.classList.remove('recording'); btn.textContent='\u25CF Record';
+      const tel = el('dpRecTimer'); if(tel) tel.textContent='';
       (DP.stream ? DP.stream.getTracks() : []).forEach(t=>t.stop());
+      const dur = (Date.now() - DP.startTs) / 1000;
       const blob = new Blob(DP.chunks, {type:DP.mime});
+      // expose the take for playback so users can hear what was captured
+      if(DP.playbackUrl){ try{ URL.revokeObjectURL(DP.playbackUrl); }catch(e){} }
+      DP.playbackUrl = URL.createObjectURL(blob);
+      const audioEl = el('dpPlaybackAudio'); if(audioEl) audioEl.src = DP.playbackUrl;
+      const pbBtn = el('dpPlayback'); if(pbBtn) pbBtn.style.display = 'inline-block';
+      // guard: too-short takes never produce usable audio, and Azure will always say NoMatch
+      if(dur < 0.8 || !blob.size || blob.size < 800){
+        const box = el('dpScore');
+        if(box) box.innerHTML = `<p class="dp-quiz-help">That take was too short (${dur.toFixed(1)}s). Wait a moment after tapping Record, speak the whole line, then tap Stop.</p>`;
+        return;
+      }
       const ref = (el('dpTarget') && el('dpTarget').textContent) || '';
       scoreBlob(blob, ref);
     };
-    try{ DP.rec.start(); }catch(e){ toast && toast('Could not start recording.'); return; }
+    // timeslice: flush chunks every 500ms so even short takes carry data
+    try{ DP.rec.start(500); }catch(e){ toast && toast('Could not start recording.'); return; }
     DP.active=true; btn.classList.add('recording'); btn.textContent='\u25A0 Stop';
+    // live timer so users can see the recording is actually running
+    if(DP.timer){ clearInterval(DP.timer); }
+    DP.timer = setInterval(()=>{
+      const tel = el('dpRecTimer'); if(!tel) return;
+      const s = (Date.now() - DP.startTs) / 1000;
+      const m = Math.floor(s/60), sec = Math.floor(s%60);
+      tel.textContent = m + ':' + (sec<10?'0':'') + sec;
+    }, 200);
   }
 
   function stopMic(){
     try{ if(DP.rec && DP.active) DP.rec.stop(); }catch(e){}
     try{ (DP.stream ? DP.stream.getTracks() : []).forEach(t=>t.stop()); }catch(e){}
     try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){}
+    if(DP.timer){ clearInterval(DP.timer); DP.timer=null; }
+    if(DP.playbackUrl){ try{ URL.revokeObjectURL(DP.playbackUrl); }catch(e){} DP.playbackUrl=null; }
     DP.active=false; DP.rec=null; DP.stream=null; DP.chunks=[];
   }
 
@@ -279,6 +310,10 @@
     const qb = el('dpQuizB'); if(qb) qb.addEventListener('click', ()=>answerQuiz(1));
     // record + hear
     const rec = el('dpRec'); if(rec) rec.addEventListener('click', toggleRecord);
+    const pb = el('dpPlayback'); if(pb) pb.addEventListener('click', ()=>{
+      const a = el('dpPlaybackAudio'); if(!a || !a.src) return;
+      try{ a.currentTime = 0; a.play(); }catch(e){}
+    });
     const hear = el('dpHear'); if(hear) hear.addEventListener('click', ()=>{ const t=el('dpTarget'); if(t) speak(t.textContent); });
     const hp = el('dpHearPara'); if(hp) hp.addEventListener('click', ()=>{ const p=el('dpPara'); if(p) speak(p.textContent); });
     const next = el('dpNext'); if(next) next.addEventListener('click', ()=>{
