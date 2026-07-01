@@ -198,7 +198,11 @@
       return;
     }
     try{ data = await res.json(); }catch(e){ data=null; }
-    if(!data || !data.ok){ box.innerHTML = `<p class="dp-quiz-help">No usable score came back. Try again.</p>`; return; }
+    if(!data || !data.ok){
+      const msg = (data && (data.message || data.error)) || 'No usable score came back. Try again.';
+      box.innerHTML = `<p class="dp-quiz-help">${escapeHtml(msg)}</p>`;
+      return;
+    }
     const overall = data.overall!=null ? Math.round(data.overall) : null;
     const head = overall!=null
       ? `<div class="section-label" style="margin-bottom:9px">Your score \u00b7 ${overall}/100</div>`
