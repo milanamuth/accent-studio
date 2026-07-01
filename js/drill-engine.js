@@ -190,7 +190,8 @@
       return;
     }
     if(!res.ok){
-      let msg = 'Scoring is not available right now.';
+      let msg = 'The scoring service returned an error ('+res.status+').';
+      try{ const j = await res.json(); if(j && j.error) msg = j.error; }catch(e){}
       if(res.status===404) msg = 'Scoring needs the /api/score function deployed with Azure speech keys set in Vercel.';
       if(res.status===413) msg = 'That take was too long. Try one sentence at a natural pace.';
       box.innerHTML = `<p class="dp-quiz-help">${escapeHtml(msg)}</p>`;
